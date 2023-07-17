@@ -10,9 +10,10 @@
   "scripts": {
     "lint": "eslint src",
     "lint:fix": "eslint --fix src",
-    "dev": "ts-node ./src/app.ts",
-    "build": "rm -rf ./dist && tsc --project .",
-    "start:prod": "pnpm build && node ./dist/app.js"
+    "dev": "ts-node --esm ./src/app.ts",
+    "build": "rm -rf ./dist && tsc  --project .",
+    "start": "node --es-module-specifier-resolution=node --loader ts-node/esm ./src/app.ts",
+    "start:prod": "pnpm build && pnpm start"
   },
   "keywords": [],
   "author": "",
