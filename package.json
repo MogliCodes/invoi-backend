@@ -11,7 +11,9 @@
     "lint": "eslint src",
     "lint:fix": "eslint --fix src",
     "dev": "ts-node --esm ./src/app.ts",
-    "build": "rm -rf ./dist && tsc  --project .",
+    "dev:watch": "ts-node-dev --respawn --transpile-only --project tsconfig.json -r tsconfig-paths/register ./src/app.ts",
+    "dev:server": "nodemon --watch './**/*.ts' --exec 'node --experimental-specifier-resolution=node --loader ts-node/esm' src/index.ts",
+    "build": "rm -rf ./build && tsc --noEmit false --project tsconfig.build.json",
     "start": "node --es-module-specifier-resolution=node --loader ts-node/esm ./src/app.ts",
     "start:prod": "pnpm build && pnpm start"
   },
@@ -19,12 +21,18 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "^5.0.0",
+    "@supabase/supabase-js": "^2.26.0",
+    "body-parser": "^1.20.2",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.1",
+    "mongoose": "^7.4.0",
     "pg": "^8.11.1"
   },
   "devDependencies": {
     "@types/express": "^4.17.17",
+    "@types/jsonwebtoken": "^9.0.2",
     "@types/node": "^20.4.2",
     "@types/pg": "^8.10.2",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
@@ -32,8 +40,16 @@
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^5.0.0",
+    "nodemon": "^3.0.1",
     "prettier": "^3.0.0",
+    "prisma": "^5.0.0",
     "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "tsc-watch": "^6.0.4",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.1.6"
+  },
+  "prisma": {
+    "schema": "./src/database/schema.prisma"
   }
 }
