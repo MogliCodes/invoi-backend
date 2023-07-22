@@ -20,6 +20,13 @@ const port: number = 8000;
 mongoose.connect(process.env.DATABASE_URL || "");
 
 app.use(bodyParser.json());
+
+app.get("/test", (req, res) => {
+  res.json({
+    message: "Hello world",
+  });
+});
+
 app.use("/api/auth", authRouter);
 app.use("/api/user", authenticate, userRouter);
 app.use("/api/client", authenticate, clientRouter);
