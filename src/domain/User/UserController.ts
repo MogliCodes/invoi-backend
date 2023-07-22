@@ -7,4 +7,10 @@ export default class UserController {
     console.log("users", users);
     res.status(200).json(users);
   }
+
+  public async getUserById(req: Request, res: Response): Promise<void> {
+    const { id } = req.params;
+    const user = await UserModel.findById(id);
+    res.status(200).json(user);
+  }
 }
