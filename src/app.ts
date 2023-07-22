@@ -17,7 +17,7 @@ config();
 
 const app: Application = express();
 const port: number = 8000;
-mongoose.connect(process.env.DATABASE_URL || "");
+mongoose.connect(process.env.DATABASE_URL);
 
 app.use(bodyParser.json());
 
