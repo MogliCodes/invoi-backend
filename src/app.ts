@@ -15,9 +15,10 @@ storageController.getStorageInfo();
 
 config();
 
+const dbUrl: string = process.env.DATABASE_URL || "";
 const app: Application = express();
 const port: number = 8000;
-mongoose.connect(process.env.DATABASE_URL);
+mongoose.connect(dbUrl);
 
 app.use(bodyParser.json());
 

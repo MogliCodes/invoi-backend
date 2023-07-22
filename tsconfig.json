@@ -16,6 +16,4 @@
     "emitDeclarationOnly": true,
     "declaration": true,
     "composite": true
-  },
-  "include": ["environment.d.ts"]
-}
+  },}

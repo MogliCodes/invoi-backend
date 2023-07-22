@@ -26,7 +26,7 @@ export default class AuthController {
       { id: user.id, username: user.username },
       jwtSecret,
       {
-        expiresIn: "1h", // Set an expiration time for the token (e.g., 1 hour)
+        expiresIn: "30d",
       },
     );
 
