@@ -13,11 +13,13 @@ import { StorageController } from "./domain/Storage/StorageController.ts";
 const storageController = new StorageController();
 storageController.getStorageInfo();
 
-config();
+config({ path: "../.env" });
 
 const dbUrl: string = process.env.DATABASE_URL || "";
 const app: Application = express();
 const port: number = 8000;
+
+console.log("dbUrl", dbUrl);
 mongoose.connect(dbUrl);
 
 app.use(bodyParser.json());
