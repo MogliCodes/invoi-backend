@@ -24,7 +24,12 @@ export default class AuthController {
             "The provided email address is already registered. Please use a different email or try logging in.",
         });
       } else {
-        const newUser = await UserModel.create({ username, email, password });
+        const encryptedPassword = await bcrypt.hash(password, 10);
+        const newUser = await UserModel.create({
+          username,
+          email,
+          password: encryptedPassword,
+        });
         res.status(201).json({ newUser });
       }
     } catch (error) {
@@ -32,17 +37,12 @@ export default class AuthController {
     }
   }
   public async login(req: Request, res: Response) {
-    console.log(req.body);
     const { username, password } = req.body;
-    const saltRounds = 10;
-
     const user = await UserModel.findOne().where("username").equals(username);
     if (!user) throw Error("No user found");
 
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
     const isPasswordMatch = await bcrypt.compare(
-      hashedPassword,
+      password,
       user?.password || "",
     );
 
@@ -53,12 +53,12 @@ export default class AuthController {
       token = jwt.sign({ id: user.id, username: user.username }, jwtSecret, {
         expiresIn: "30d",
       });
-      res.status(200).json({ token });
+      res
+        .status(200)
+        .json({ id: user.id, username: user.username, token: token });
     } else {
       console.log("NOOOO");
+      res.status(200).json({ error: "Password does not match" });
     }
-
-    res.status(200).json({ user });
-    //
   }
 }

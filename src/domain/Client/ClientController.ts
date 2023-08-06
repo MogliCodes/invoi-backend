@@ -6,4 +6,20 @@ export default class UserController {
     const clients = await ClientModel.find();
     res.status(200).json(clients);
   }
+
+  public async getClientById(req: Request, res: Response): Promise<void> {
+    res.status(200).json({ message: "getCliebtById" });
+  }
+
+  public async createClient(req: Request, res: Response): Promise<void> {
+    res.status(201).json({ message: "createClient" });
+  }
+
+  public async editClientById(req: Request, res: Response): Promise<void> {
+    res.status(200).json({ message: "editClient" });
+  }
+
+  public async deleteClientById(req: Request, res: Response): Promise<void> {
+    res.status(200).json({ message: "deleteClient" });
+  }
 }
