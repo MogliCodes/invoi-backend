@@ -1,9 +1,44 @@
 import { Request, Response } from "express";
 import InvoiceModel from "./InvoiceModel.ts";
 import { StorageClient } from "@supabase/storage-js";
+import Papa from "papaparse";
+import mongoose, { Document } from "mongoose";
 
 const STORAGE_URL = "https://dpoohyfcotuziotpwgbf.supabase.co/storage/v1";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || "";
+const csvSchema = new mongoose.Schema({
+  Dateiname: String,
+  Kunde: String,
+  Projekt: String,
+  Rechnungsnummer: String,
+  Rechnungsdatum: String,
+  "Mwst.": String,
+  "Netto-Rechnungssume": String,
+  "Brutto-Rechnungssume": String,
+});
+const CsvModel = mongoose.model("CsvModel", csvSchema);
+
+interface ParsedInvoice extends Document {
+  Dateiname: string;
+  Kunde: string;
+  Projekt: string;
+  Rechnungsnummer: string;
+  Rechnungsdatum: string;
+  "Mwst.": string;
+  "Netto-Rechnungssume": string;
+  "Brutto-Rechnungssume": string;
+}
+
+type InvoiceModel = {
+  nr: string;
+  client: string;
+  title: string;
+  date: Date;
+};
+
+type CsvData = {
+  data: Array<ParsedInvoice>;
+};
 
 export default class UserController {
   public async getAllInvoices(req: Request, res: Response): Promise<void> {
@@ -38,7 +73,6 @@ export default class UserController {
     req: Request,
     res: Response,
   ): Promise<void> {
-    // Need supabase client
     const storageClient = new StorageClient(STORAGE_URL, {
       apikey: SERVICE_KEY,
       Authorization: `Bearer ${SERVICE_KEY}`,
@@ -57,5 +91,44 @@ export default class UserController {
   ): Promise<void> {
     console.log(req);
     res.json({ message: "Hello" });
+  }
+
+  public async importInvoiceData(req: Request, res: Response): Promise<void> {
+    console.log(req);
+    if (req.file) {
+      console.log(req.file.buffer.toString());
+      const csvData = req.file.buffer.toString();
+
+      // Parse CSV data using Papa Parse
+      const parsedData: Papa.ParseResult<ParsedInvoice> = Papa.parse(csvData, {
+        header: true,
+        skipEmptyLines: true,
+      });
+
+      const transformedData: Array<InvoiceModel> = parsedData.data.map(
+        (invoice) => {
+          return {
+            nr: invoice.Rechnungsnummer,
+            client: invoice.Kunde,
+            title: invoice.Projekt,
+            date: new Date(
+              invoice.Rechnungsdatum.split(".").reverse().join("-"),
+            ),
+          };
+        },
+      );
+      console.log("transformedData", transformedData);
+
+      try {
+        const insertedData = await InvoiceModel.insertMany(transformedData);
+        console.log("CSV data saved to MongoDB:", insertedData);
+        res.json({
+          message: "CSV data uploaded and saved to MongoDB successfully.",
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error saving data to MongoDB" });
+      }
+    }
   }
 }
