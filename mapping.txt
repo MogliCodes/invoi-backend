@@ -1,0 +1,14 @@
+_id
+nr
+client
+title
+date
+dateRangeStart
+dateRangeEnd
+status
+items
+billingTotal => total
+billingTaxes => taxes
+billingTotalWithTaxes => totalWithTaxes
+file
+user
