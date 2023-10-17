@@ -3,6 +3,7 @@ import InvoiceModel from "./InvoiceModel.ts";
 import { StorageClient } from "@supabase/storage-js";
 import Papa from "papaparse";
 import mongoose, { Document } from "mongoose";
+import Pdfjs from "pdfjs-dist";
 
 const STORAGE_URL = "https://dpoohyfcotuziotpwgbf.supabase.co/storage/v1";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || "";
@@ -16,6 +17,7 @@ const csvSchema = new mongoose.Schema({
   "Netto-Rechnungssume": String,
   "Brutto-Rechnungssume": String,
 });
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const CsvModel = mongoose.model("CsvModel", csvSchema);
 
 interface ParsedInvoice extends Document {
@@ -36,6 +38,7 @@ type InvoiceModel = {
   date: Date;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type CsvData = {
   data: Array<ParsedInvoice>;
 };
@@ -114,6 +117,9 @@ export default class UserController {
             date: new Date(
               invoice.Rechnungsdatum.split(".").reverse().join("-"),
             ),
+            total: invoice["Netto-Rechnungssume"],
+            taxes: invoice["Mwst."],
+            totalWithTaxes: invoice["Brutto-Rechnungssume"],
           };
         },
       );
@@ -129,6 +135,22 @@ export default class UserController {
         console.error(error);
         res.status(500).json({ error: "Error saving data to MongoDB" });
       }
+    }
+  }
+
+  public async importPdfInvoiceData(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    console.log("hello pdf import");
+    if (req.file) {
+      console.log(req.file.buffer.toString());
+      const data = req.file.buffer;
+      const dataArray = new Uint8Array(data);
+      const doc = await Pdfjs.getDocument(dataArray).promise;
+      console.log("dataArray", dataArray);
+      console.log("doc", doc);
+      res.send("HELLO");
     }
   }
 }

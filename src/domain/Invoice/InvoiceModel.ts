@@ -28,13 +28,13 @@ const invoiceSchema = new mongoose.Schema({
   items: {
     type: String,
   },
-  billingTotal: {
+  total: {
     type: String,
   },
-  billingTaxes: {
+  taxes: {
     type: String,
   },
-  billingTotalWithTaxes: {
+  totalWithTaxes: {
     type: String,
   },
   file: {

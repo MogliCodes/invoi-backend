@@ -20,4 +20,10 @@ router.post(
   invoiceController.importInvoiceData,
 );
 
+router.post(
+  "/import/pdf",
+  upload.single("pdfFile"),
+  invoiceController.importPdfInvoiceData,
+);
+
 export default router;
