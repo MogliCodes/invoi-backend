@@ -48,17 +48,17 @@ const contactModel = mongoose.model("Contact", contactSchema);
 
 function createRandomContact() {
   return {
-    user: faker.string.uuid(),
     firstname: faker.person.firstName(),
     lastname: faker.person.lastName(),
     dob: faker.date.birthdate(),
     street: faker.location.streetAddress(),
     zip: faker.location.zipCode(),
     city: faker.location.city(),
+    user: "6528f805a3b18735c132f163",
   };
 }
 
-for (let i = 0; i < 20; i++) {
+for (let i = 0; i < 250; i++) {
   const contact = createRandomContact();
   const res = await contactModel.create(contact);
   console.log("res", res);

@@ -6,6 +6,7 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import authRouter from "./app/auth/AuthRoutes.ts";
 import userRouter from "./domain/User/UserRoutes.ts";
+import contactRouter from "./domain/Contact/ContactRoutes.ts";
 import clientRouter from "./domain/Client/ClientRoutes.ts";
 import invoiceRouter from "./domain/Invoice/InvoiceRoutes.ts";
 import { authenticate } from "./app/middleware/auth.ts";
@@ -26,6 +27,7 @@ app.use(bodyParser.json());
 app.use(cors());
 app.use("/api/auth", authRouter);
 app.use("/api/user", authenticate, userRouter);
+app.use("/api/contact", authenticate, contactRouter);
 app.use("/api/client", authenticate, clientRouter);
 app.use("/api/invoice", invoiceRouter);
 
