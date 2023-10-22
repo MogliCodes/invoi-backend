@@ -11,8 +11,7 @@
     "lint": "eslint src",
     "lint:fix": "eslint --fix src",
     "dev": "ts-node --esm ./src/app.ts",
-    "dev:watch": "ts-node-dev --respawn --transpile-only --project tsconfig.json -r tsconfig-paths/register ./src/app.ts",
-    "dev:server": "nodemon --watch './**/*.ts' --exec 'node --experimental-specifier-resolution=node --loader ts-node/esm' src/index.ts",
+    "dev:watch": "nodemon --watch './**/*.ts' --exec 'node --experimental-specifier-resolution=node --loader ts-node/esm' src/app.ts",
     "build": "rm -rf ./build && tsc --noEmit false --project tsconfig.build.json",
     "start": "node --es-module-specifier-resolution=node --loader ts-node/esm ./src/app.ts",
     "start:prod": "pnpm build && pnpm start"
