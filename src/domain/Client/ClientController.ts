@@ -1,10 +1,21 @@
 import { Request, Response } from "express";
 import ClientModel from "./ClientModel.ts";
 
-export default class UserController {
+export default class ClientController {
   public async getAllClients(req: Request, res: Response): Promise<void> {
     const clients = await ClientModel.find();
     res.status(200).json(clients);
+  }
+
+  public async getClientCountByUserId(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    const { headers } = req;
+    const clientCount = await ClientModel.countDocuments({
+      id: headers?.clientId,
+    });
+    res.status(200).json(clientCount);
   }
 
   public async getClientById(req: Request, res: Response): Promise<void> {

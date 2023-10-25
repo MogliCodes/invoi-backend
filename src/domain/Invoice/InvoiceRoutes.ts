@@ -8,10 +8,11 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 router.get("/", invoiceController.getAllInvoices);
+router.get("/count", invoiceController.getInvoicesCountByUserId);
+
 // TODO: How to PROPERLY nest API routes?
 // router.get("/:id", invoiceController.getInvoiceByid);
 router.post("/", invoiceController.createInvoice);
-
 router.get("/templates", invoiceController.getAllCustomTemplates);
 router.post("/template", invoiceController.uploadCustomTemplate);
 router.post(
