@@ -21,4 +21,9 @@ export default class ContactController {
     });
     res.status(200).json(contactCount);
   }
+
+  public async createContact(req: Request, res: Response): Promise<void> {
+    const contact = ContactModel.create(req.body);
+    res.status(201).json(contact);
+  }
 }
