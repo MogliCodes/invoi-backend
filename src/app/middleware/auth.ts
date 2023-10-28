@@ -40,7 +40,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
   if (!user) {
     return res.status(401).json({ message: "Invalid token" });
   }
-
+  console.info("valid token provided");
   req.user = user;
   next();
 }

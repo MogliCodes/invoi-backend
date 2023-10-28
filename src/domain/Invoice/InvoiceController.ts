@@ -4,7 +4,6 @@ import { StorageClient } from "@supabase/storage-js";
 import Papa from "papaparse";
 import mongoose, { Document } from "mongoose";
 import Pdfjs from "pdfjs-dist";
-import ContactModel from "../Contact/ContactModel.js";
 
 const STORAGE_URL = "https://dpoohyfcotuziotpwgbf.supabase.co/storage/v1";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || "";
