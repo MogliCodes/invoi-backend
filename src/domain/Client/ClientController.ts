@@ -2,8 +2,14 @@ import { Request, Response } from "express";
 import ClientModel from "./ClientModel.ts";
 
 export default class ClientController {
-  public async getAllClients(req: Request, res: Response): Promise<void> {
-    const clients = await ClientModel.find();
+  public async getAllClientsByUserId(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    const { headers } = req;
+    const clients = await ClientModel.find({
+      id: headers?.clientId,
+    });
     res.status(200).json(clients);
   }
 
