@@ -23,7 +23,10 @@ export default class ContactController {
   }
 
   public async createContact(req: Request, res: Response): Promise<void> {
-    const contact = ContactModel.create(req.body);
-    res.status(201).json(contact);
+    const contact = await ContactModel.create(req.body);
+    console.log(contact);
+    res
+      .status(201)
+      .json({ status: 201, message: "Successfully created contact" });
   }
 }
