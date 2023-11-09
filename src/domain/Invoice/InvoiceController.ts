@@ -4,6 +4,7 @@ import { StorageClient } from "@supabase/storage-js";
 import Papa from "papaparse";
 import mongoose, { Document } from "mongoose";
 import Pdfjs from "pdfjs-dist";
+import * as fs from "fs";
 
 const STORAGE_URL = "https://dpoohyfcotuziotpwgbf.supabase.co/storage/v1";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || "";
@@ -43,9 +44,55 @@ type CsvData = {
   data: Array<ParsedInvoice>;
 };
 
+interface RequestParams {
+  id: string;
+}
+
+interface QueryParams {
+  page: number;
+  pageSize: number;
+}
+
+interface RequestBody {
+  key: string;
+  value: string;
+}
+
+interface ResponseData {
+  message: string;
+}
+
+// Function to convert extracted text to CSV
+function formatTextToCSV(text: string) {
+  const rows = text.split("\n");
+
+  const headers = rows[0].trim().split(/\s+/);
+  const rowsAndColumns = rows.slice(1).map((row) => {
+    const columns = row.trim().split(/\s{2,}/); // Split on 2 or more consecutive spaces
+    const position = columns[0];
+    const leistung = columns[1];
+    const stundensatz = columns[2];
+    const faktor = columns[3];
+    const gesamtpreis = columns[4];
+    return [position, leistung, stundensatz, faktor, gesamtpreis];
+  });
+
+  const csvRows = rowsAndColumns.map((columns) => columns.join(","));
+  const csvString = [headers.join(","), ...csvRows].join("\n");
+  return csvString;
+}
+
 export default class UserController {
-  public async getAllInvoices(req: Request, res: Response): Promise<void> {
-    const clients = await InvoiceModel.find();
+  public async getAllInvoices(
+    req: Request<RequestParams, ResponseData, RequestBody, QueryParams>,
+    res: Response,
+  ): Promise<void> {
+    const { page, pageSize } = req.query;
+    console.log("query params", page, pageSize);
+    const clients = await InvoiceModel.find()
+      .sort({ ["nr"]: 1 })
+      .skip((page - 1) * pageSize)
+      .limit(pageSize);
     res.status(200).json(clients);
   }
   public async getInvoicesCountByUserId(
@@ -160,6 +207,29 @@ export default class UserController {
       const doc = await Pdfjs.getDocument(dataArray).promise;
       console.log("dataArray", dataArray);
       console.log("doc", doc);
+
+      const numPages = doc.numPages;
+
+      let pdfContent = "";
+
+      for (let pageIndex = 0; pageIndex < numPages; pageIndex++) {
+        const page = await doc.getPage(pageIndex + 1);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(" ");
+        pdfContent += pageText;
+      }
+      const startIndex = pdfContent.indexOf("Position");
+      let invoiceData = "";
+      if (startIndex !== -1) {
+        invoiceData = pdfContent.substring(startIndex);
+      }
+      console.log("invoiceData", invoiceData);
+
+      const formattedCSV = formatTextToCSV(invoiceData);
+      console.log("formattedCSV", formattedCSV);
+
       res.send("HELLO");
     }
   }

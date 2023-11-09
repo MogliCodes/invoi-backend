@@ -1,13 +1,35 @@
 import { Request, Response } from "express";
 import ContactModel from "./ContactModel.ts";
 
+interface RequestParams {
+  id: string;
+}
+
+interface QueryParams {
+  page: number;
+  pageSize: number;
+}
+
+interface RequestBody {
+  key: string;
+  value: string;
+}
+
+interface ResponseData {
+  message: string;
+}
+
 export default class ContactController {
   public async getAllContactsByUserId(
-    req: Request,
+    req: Request<RequestParams, ResponseData, RequestBody, QueryParams>,
     res: Response,
   ): Promise<void> {
     const { headers } = req;
-    const contacts = await ContactModel.find({ id: headers?.clientId });
+    const { page, pageSize } = req.query;
+    const contacts = await ContactModel.find({ id: headers?.clientId })
+      .sort({ ["lastname"]: 1 })
+      .skip((page - 1) * pageSize)
+      .limit(pageSize);
     res.status(200).json(contacts);
   }
 
