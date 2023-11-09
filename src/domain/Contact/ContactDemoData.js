@@ -54,11 +54,11 @@ function createRandomContact() {
     street: faker.location.streetAddress(),
     zip: faker.location.zipCode(),
     city: faker.location.city(),
-    user: "6528f805a3b18735c132f163",
+    user: "test",
   };
 }
 
-for (let i = 0; i < 2; i++) {
+for (let i = 0; i < 100; i++) {
   const contact = createRandomContact();
   const res = await contactModel.create(contact);
   console.log("res", res);
