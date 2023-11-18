@@ -5,6 +5,7 @@ import Papa from "papaparse";
 import mongoose, { Document } from "mongoose";
 import Pdfjs from "pdfjs-dist";
 import * as fs from "fs";
+import ContactModel from "../Contact/ContactModel.js";
 
 const STORAGE_URL = "https://dpoohyfcotuziotpwgbf.supabase.co/storage/v1";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || "";
@@ -30,6 +31,7 @@ interface ParsedInvoice extends Document {
   "Mwst.": string;
   "Netto-Rechnungssume": string;
   "Brutto-Rechnungssume": string;
+  user: string;
 }
 
 type InvoiceModel = {
@@ -88,8 +90,9 @@ export default class UserController {
     res: Response,
   ): Promise<void> {
     const { page, pageSize } = req.query;
-    console.log("query params", page, pageSize);
-    const clients = await InvoiceModel.find()
+    const { headers } = req;
+    console.log("headers", headers);
+    const clients = await InvoiceModel.find({ user: headers.userid })
       .sort({ ["nr"]: 1 })
       .skip((page - 1) * pageSize)
       .limit(pageSize);
@@ -101,7 +104,7 @@ export default class UserController {
   ): Promise<void> {
     const { headers } = req;
     const invoiceCount = await InvoiceModel.countDocuments({
-      id: headers?.clientId,
+      user: headers?.userid,
     });
     res.status(200).json(invoiceCount);
   }
@@ -112,13 +115,15 @@ export default class UserController {
 
   public async createInvoice(req: Request, res: Response): Promise<void> {
     // Take invoice data and create database entry
-
+    const invoice = await InvoiceModel.create(req.body);
+    console.log(invoice);
+    res
+      .status(201)
+      .json({ status: 201, message: "Successfully created invoice" });
     // If invoice was written succesfully to database
     // Create PDF
     // select chosen template
     // Upload PDF to supabase storage
-
-    res.status(201).json({ message: "getInvoiceById" });
   }
 
   public async uploadInvoicePdfTemplate(
@@ -177,6 +182,7 @@ export default class UserController {
             total: invoice["Netto-Rechnungssume"],
             taxes: invoice["Mwst."],
             totalWithTaxes: invoice["Brutto-Rechnungssume"],
+            user: invoice.user,
           };
         },
       );
@@ -186,6 +192,7 @@ export default class UserController {
         const insertedData = await InvoiceModel.insertMany(transformedData);
         console.log("CSV data saved to MongoDB:", insertedData);
         res.json({
+          status: 200,
           message: "CSV data uploaded and saved to MongoDB successfully.",
         });
       } catch (error) {

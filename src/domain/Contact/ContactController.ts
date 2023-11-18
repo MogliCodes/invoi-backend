@@ -70,10 +70,6 @@ export default class ContactController {
   }
 
   public async patchContact(req: Request, res: Response): Promise<void> {
-    console.log("PATCH CONTACT");
-    console.log("PATCH CONTACT", req.params.id);
-    console.log("PATCH CONTACT", req.body);
-
     const query = { _id: req.params.id };
     const options = { upsert: true };
     const updatedContact = req.body;
@@ -89,5 +85,28 @@ export default class ContactController {
     res
       .status(200)
       .json({ status: 200, message: "Successfully patched contact" });
+  }
+
+  public async deleteContact(req: Request, res: Response): Promise<void> {
+    console.log("EXPRESS SERVER");
+    console.log("req.params.id", req.params.id);
+    const query = { _id: req.params.id };
+
+    const result = ContactModel.deleteOne(query).catch((err) =>
+      console.error(`Failed to add review: ${err}`),
+    );
+    res
+      .status(200)
+      .json({ status: 200, message: "Successfully deleted contact" });
+  }
+
+  public async bulkDeleteContacts(req: Request, res: Response): Promise<void> {
+    const ids = req.body;
+    const result = await ContactModel.deleteMany({ _id: { $in: ids } });
+
+    res.status(200).json({
+      status: 200,
+      message: `Successfully delete  ${result.deletedCount} contacts`,
+    });
   }
 }
