@@ -8,7 +8,7 @@ export default class ClientController {
   ): Promise<void> {
     const { headers } = req;
     const clients = await ClientModel.find({
-      id: headers?.clientId,
+      user: headers?.clientid,
     });
     res.status(200).json(clients);
   }

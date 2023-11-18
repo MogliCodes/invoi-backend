@@ -6,5 +6,6 @@ const router: Router = Router();
 
 router.get("/", userController.getAllUsers);
 router.get("/:id", userController.getUserById);
+router.patch("/:id", userController.patchUser);
 
 export default router;
