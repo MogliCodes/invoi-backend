@@ -14,6 +14,7 @@ router.get("/count", invoiceController.getInvoicesCountByUserId);
 // router.get("/:id", invoiceController.getInvoiceByid);
 router.post("/", invoiceController.createInvoice);
 router.get("/templates", invoiceController.getAllCustomTemplates);
+router.get("/number", invoiceController.getNewInvoiceNumber);
 router.post("/template", invoiceController.uploadCustomTemplate);
 router.post(
   "/import",
