@@ -240,4 +240,46 @@ export default class UserController {
       res.send("HELLO");
     }
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public async getNewInvoiceNumber(req: Request, res: Response): Promise<void> {
+    const currentYear = new Date().getFullYear();
+    console.log("currentYear", currentYear);
+    const searchQuery = `^${currentYear}`;
+    console.log("searchQuery", searchQuery);
+
+    const query = await InvoiceModel.find({ nr: new RegExp(searchQuery) });
+    const latestInvoice = await InvoiceModel.findOne({
+      nr: { $regex: /^2023-\d+$/ },
+    }) // Match the pattern "YYYY-NNN"
+      .sort({ nr: -1 }) // Sort in descending order based on the numeric value of the suffix
+      .limit(1); // Limit the result to one document
+
+    if (!latestInvoice) {
+      res.send(400);
+      return;
+    }
+    // Given invoice number
+    const currentInvoiceNumber = latestInvoice.nr;
+
+    // Extract the numeric part
+    const numericPart = parseInt(currentInvoiceNumber.split("-")[1]);
+
+    // Increment the numeric part
+    const incrementedNumericPart = numericPart + 1;
+
+    // Format the new invoice number
+    const newInvoiceNumber = `2023-${String(incrementedNumericPart).padStart(
+      3,
+      "0",
+    )}`;
+    console.log("newInvoiceNumber", newInvoiceNumber);
+
+    if (!query.length) {
+      res.json({ number: `${currentYear}-001` });
+    } else {
+      res.json(newInvoiceNumber);
+      console.log("query", query);
+    }
+  }
 }

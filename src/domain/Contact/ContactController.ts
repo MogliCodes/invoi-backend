@@ -8,6 +8,7 @@ interface RequestParams {
 interface QueryParams {
   page: number;
   pageSize: number;
+  search: string;
 }
 
 interface RequestBody {
@@ -25,13 +26,14 @@ export default class ContactController {
     res: Response,
   ): Promise<void> {
     const { headers } = req;
-    console.log("headers", headers);
-    console.log("headers?.clientId", headers?.clientid);
-    const { page, pageSize } = req.query;
-    const contacts = await ContactModel.find({ user: headers?.clientid })
+    const { page, pageSize, search } = req.query;
+    const contacts = await ContactModel.find({
+      user: headers?.clientid,
+    })
       .sort({ ["lastname"]: 1 })
       .skip((page - 1) * pageSize)
       .limit(pageSize);
+
     res.status(200).json(contacts);
   }
 
