@@ -16,10 +16,10 @@ const invoiceSchema = new mongoose.Schema({
   date: {
     type: Date,
   },
-  dateRangeStart: {
+  performancePeriodStart: {
     type: Date,
   },
-  dateRangeEnd: {
+  performancePeriodEnd: {
     type: Date,
   },
   status: {

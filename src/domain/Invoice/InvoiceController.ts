@@ -104,7 +104,7 @@ export default class UserController {
   ): Promise<void> {
     const { headers } = req;
     const invoiceCount = await InvoiceModel.countDocuments({
-      user: headers?.userid,
+      user: headers?.clientid,
     });
     res.status(200).json(invoiceCount);
   }
