@@ -13,6 +13,7 @@ router.get("/count", invoiceController.getInvoicesCountByUserId);
 // TODO: How to PROPERLY nest API routes?
 // router.get("/:id", invoiceController.getInvoiceByid);
 router.post("/", invoiceController.createInvoice);
+router.post("/pdf", invoiceController.createInvoicePdf);
 router.get("/templates", invoiceController.getAllCustomTemplates);
 router.get("/number", invoiceController.getNewInvoiceNumber);
 router.post("/template", invoiceController.uploadCustomTemplate);
