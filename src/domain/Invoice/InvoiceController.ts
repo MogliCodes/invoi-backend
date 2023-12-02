@@ -1,11 +1,10 @@
 import { Request, Response } from "express";
 import InvoiceModel from "./InvoiceModel.ts";
+import InvoiceService from "./InvoiceService.js";
 import { StorageClient } from "@supabase/storage-js";
 import Papa from "papaparse";
 import mongoose, { Document } from "mongoose";
 import Pdfjs from "pdfjs-dist";
-import * as fs from "fs";
-import ContactModel from "../Contact/ContactModel.js";
 
 const STORAGE_URL = "https://dpoohyfcotuziotpwgbf.supabase.co/storage/v1";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || "";
@@ -281,5 +280,12 @@ export default class UserController {
       res.json(newInvoiceNumber);
       console.log("query", query);
     }
+  }
+
+  public async createInvoicePdf(req: Request, res: Response): Promise<void> {
+    console.log("req.body", req.body);
+    const invoiceData = req.body;
+    await InvoiceService.createPdf(invoiceData);
+    res.json({ message: "Created pdf" });
   }
 }
