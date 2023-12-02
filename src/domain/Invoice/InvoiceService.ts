@@ -6,7 +6,9 @@ import { Browser, chromium } from "playwright";
 import handlebars from "handlebars";
 import {
   calculateInvoiceItemCharCount,
+  calculatePages,
   getDefaultTemplate,
+  getLastPageTemplate,
   getSubsequentPagesTemplate,
   transformInvoiceData,
 } from "./InvoiceUtilities.ts";
@@ -34,7 +36,7 @@ type InvoiceData = {
 
 export default class InvoiceService {
   static async createPdf(invoiceData: InvoiceData): Promise<void> {
-    const maxCharsPerPage = 600;
+    const maxCharsPerPage = 900;
     let currentPageChars = 0;
     let currentPageIndex = 0;
     // Accumulate items for one page
@@ -42,6 +44,10 @@ export default class InvoiceService {
 
     // Transform the invoice data
     const transformedInvoiceData = transformInvoiceData(invoiceData);
+    const numberOfPages = calculatePages(
+      transformedInvoiceData.items,
+      maxCharsPerPage,
+    );
 
     // Create a browser instance
     const browser = await chromium.launch();
@@ -58,12 +64,20 @@ export default class InvoiceService {
         currentPageIndex++;
         currentPageChars = 0;
 
+        // Calculate subtotal from itemsForOnePage
+        const subtotal = itemsForOnePage.reduce(
+          (acc, item) => acc + item.total,
+          0,
+        );
+
         // Process items for the previous page
         const pageHtml = await this.processItemsForPage(
           itemsForOnePage,
           currentPageIndex,
-          invoiceData,
+          transformedInvoiceData,
           browser,
+          numberOfPages,
+          subtotal,
         );
         allPagesHtml += pageHtml;
 
@@ -75,13 +89,14 @@ export default class InvoiceService {
       itemsForOnePage.push(item);
       currentPageChars += itemCharCount;
     }
-
+    currentPageIndex++;
     // Process the remaining items for the last page
     const lastPageHtml = await this.processItemsForPage(
       itemsForOnePage,
       currentPageIndex,
-      invoiceData,
+      transformedInvoiceData,
       browser,
+      numberOfPages,
     );
     allPagesHtml += lastPageHtml;
 
@@ -98,21 +113,35 @@ export default class InvoiceService {
     currentPageIndex: number,
     invoiceData: InvoiceData,
     browser: Browser,
+    numberOfPages: number,
+    subtotal: number = 0,
   ): Promise<string> {
     // Create a new page for each page
     const page = await browser.newPage();
 
-    // Use different templates for the first page and subsequent pages
-    const template =
-      currentPageIndex === 1
-        ? handlebars.compile(getDefaultTemplate())
-        : handlebars.compile(getSubsequentPagesTemplate());
+    const isLastPage = currentPageIndex === numberOfPages;
+
+    const template = isLastPage
+      ? handlebars.compile(getLastPageTemplate())
+      : currentPageIndex === 1
+      ? handlebars.compile(getDefaultTemplate())
+      : handlebars.compile(getSubsequentPagesTemplate());
 
     // Render the template
     const html = template({
-      invoice: transformInvoiceData(invoiceData),
+      nr: invoiceData.nr,
+      client: invoiceData.client,
+      title: invoiceData.title,
+      date: invoiceData.date,
+      performancePeriodStart: invoiceData.performancePeriodStart,
+      performancePeriodEnd: invoiceData.performancePeriodEnd,
       items: itemsForOnePage,
-      currentPageIndex,
+      currentPage: currentPageIndex,
+      pageCount: numberOfPages,
+      total: invoiceData.total,
+      taxes: invoiceData.taxes,
+      totalWithTaxes: invoiceData.totalWithTaxes,
+      subtotal: subtotal,
     });
 
     // Set the page content

@@ -72,6 +72,10 @@ export function getSubsequentPagesTemplate(): string {
   return fs.readFileSync(`${__dirname}/template-subsequent.html`, "utf8");
 }
 
+export function getLastPageTemplate(): string {
+  return fs.readFileSync(`${__dirname}/template-last-page.html`, "utf8");
+}
+
 export function saveTemplateHtml(templateHtml: any): void {
   const timestamp = new Date().toISOString().replace(/:/g, "-").slice(0, -5); // Remove seconds and replace colons with dashes
 
@@ -91,5 +95,37 @@ type InvoicePosition = {
 };
 
 export function calculateInvoiceItemCharCount(item: InvoicePosition): number {
-  return item.description.length + item.hours.toString().length;
+  return item.description.length;
+}
+
+export function calculatePages(
+  items: InvoicePosition[],
+  maxCharsPerPage: number,
+) {
+  let totalCharCount = 0;
+  let currentPageCharCount = 0;
+  let totalPages = 0;
+
+  for (const item of items) {
+    const itemCharCount = calculateItemCharCount(item);
+
+    if (currentPageCharCount + itemCharCount > maxCharsPerPage) {
+      currentPageCharCount = 0;
+      totalPages += 1;
+    }
+
+    currentPageCharCount += itemCharCount;
+  }
+
+  // Add the last page if there are remaining items
+  if (currentPageCharCount > 0) {
+    totalPages += 1;
+  }
+
+  return totalPages;
+}
+
+function calculateItemCharCount(item: InvoicePosition) {
+  // Implement your logic to calculate the character count for each item
+  return item.description.length;
 }
