@@ -12,6 +12,7 @@ router.get("/count", invoiceController.getInvoicesCountByUserId);
 
 // TODO: How to PROPERLY nest API routes?
 // router.get("/:id", invoiceController.getInvoiceByid);
+router.post("/bulk/delete", invoiceController.bulkDeleteInvoices);
 router.post("/", invoiceController.createInvoice);
 router.post("/pdf", invoiceController.createInvoicePdf);
 router.get("/templates", invoiceController.getAllCustomTemplates);
@@ -28,5 +29,6 @@ router.post(
   upload.single("pdfFile"),
   invoiceController.importPdfInvoiceData,
 );
+router.delete("/:id", invoiceController.deleteInvoice);
 
 export default router;

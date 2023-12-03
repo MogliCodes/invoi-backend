@@ -44,6 +44,7 @@ export default class InvoiceService {
 
     // Transform the invoice data
     const transformedInvoiceData = transformInvoiceData(invoiceData);
+    console.log("transformedInvoiceData", transformedInvoiceData);
     const numberOfPages = calculatePages(
       transformedInvoiceData.items,
       maxCharsPerPage,
