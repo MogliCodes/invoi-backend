@@ -25,9 +25,12 @@ type InvoiceData = {
 };
 
 export function transformInvoiceData(data: InvoiceData): InvoiceData {
-  const transformedData: InvoiceData = { ...data };
+  const transformedData = { ...data };
 
+  console.log("transformedData", transformedData);
   // Convert date strings to human-readable format
+  transformedData.items = JSON.parse(data.items.toString());
+  console.log("transformData", transformedData);
   transformedData.date = new Date(data.date).toLocaleDateString();
   transformedData.performancePeriodStart = new Date(
     data.performancePeriodStart,
@@ -53,7 +56,7 @@ export function transformInvoiceData(data: InvoiceData): InvoiceData {
   // Optionally, you can format other numeric properties in the object as needed
 
   // Format numbers in items array
-  transformedData.items = data.items.map((item) => ({
+  transformedData.items = transformedData.items?.map((item) => ({
     ...item,
     total:
       typeof item.total === "number"

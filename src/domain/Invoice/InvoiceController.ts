@@ -5,6 +5,7 @@ import { StorageClient } from "@supabase/storage-js";
 import Papa from "papaparse";
 import mongoose, { Document } from "mongoose";
 import Pdfjs from "pdfjs-dist";
+import { transformInvoiceData } from "./InvoiceUtilities.js";
 
 const STORAGE_URL = "https://dpoohyfcotuziotpwgbf.supabase.co/storage/v1";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || "";
@@ -38,6 +39,25 @@ type InvoiceModel = {
   client: string;
   title: string;
   date: Date;
+};
+type InvoicePosition = {
+  position: number;
+  description: string;
+  hours: number;
+  factor: number;
+  total: number;
+};
+type InvoiceData = {
+  nr: string;
+  client: string;
+  title: string;
+  date: string;
+  performancePeriodStart: string;
+  performancePeriodEnd: string;
+  items: Array<InvoicePosition>;
+  total: number;
+  taxes: number;
+  totalWithTaxes: number;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -103,7 +123,7 @@ export default class UserController {
   ): Promise<void> {
     const { headers } = req;
     const invoiceCount = await InvoiceModel.countDocuments({
-      user: headers?.clientid,
+      user: headers?.userid,
     });
     res.status(200).json(invoiceCount);
   }
@@ -115,6 +135,9 @@ export default class UserController {
   public async createInvoice(req: Request, res: Response): Promise<void> {
     // Take invoice data and create database entry
     const invoice = await InvoiceModel.create(req.body);
+    const invoiceData = req.body;
+    console.log("req.body", req.body);
+    await InvoiceService.createPdf(invoiceData);
     console.log(invoice);
     res
       .status(201)
@@ -287,5 +310,20 @@ export default class UserController {
     const invoiceData = req.body;
     await InvoiceService.createPdf(invoiceData);
     res.json({ message: "Created pdf" });
+  }
+
+  public async deleteInvoice(req: Request, res: Response): Promise<void> {
+    const { id } = req.params;
+    console.log("DELETE ID", id);
+    await InvoiceModel.findByIdAndDelete(id);
+    res.json({ message: "Deleted invoice" });
+  }
+
+  public async bulkDeleteInvoices(req: Request, res: Response): Promise<void> {
+    const invoices = req.body;
+    console.log(invoices);
+    console.log("invoices", req.body);
+    await InvoiceModel.deleteMany({ _id: { $in: invoices } });
+    res.json({ message: "Deleted invoices" });
   }
 }
