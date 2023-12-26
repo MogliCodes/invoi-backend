@@ -46,20 +46,21 @@ const contactSchema = new mongoose.Schema({
 });
 const contactModel = mongoose.model("Contact", contactSchema);
 
-function createRandomContact() {
+function createRandomContact(userId = "6582e13c5499efbb082feb4b") {
   return {
     firstname: faker.person.firstName(),
     lastname: faker.person.lastName(),
     dob: faker.date.birthdate(),
     street: faker.location.streetAddress(),
     zip: faker.location.zipCode(),
-    city: faker.location.city(),
-    user: "test",
+    user: userId,
   };
 }
 
-for (let i = 0; i < 100; i++) {
-  const contact = createRandomContact();
-  const res = await contactModel.create(contact);
-  console.log("res", res);
+export async function createDemoContacts() {
+  for (let i = 0; i < 50; i++) {
+    const contact = createRandomContact();
+    const res = await contactModel.create(contact);
+    console.log("res", res);
+  }
 }

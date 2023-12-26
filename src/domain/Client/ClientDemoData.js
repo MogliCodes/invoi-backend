@@ -29,18 +29,18 @@ const clientSchema = new mongoose.Schema({
 });
 const clientModel = mongoose.model("Client", clientSchema);
 
-function createRandomClient() {
+function createRandomClient(userId = "6582e13c5499efbb082feb4b") {
   return {
     company: faker.company.name(),
     street: faker.location.streetAddress(),
     zip: faker.location.zipCode(),
     city: faker.location.city(),
     taxId: faker.finance.iban(),
-    user: "6528f805a3b18735c132f163",
+    user: userId,
   };
 }
 
-for (let i = 0; i < 50; i++) {
+for (let i = 0; i < 10; i++) {
   const client = createRandomClient();
   const res = await clientModel.create(client);
   console.log("res", res);

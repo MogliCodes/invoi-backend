@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import ContactModel from "./ContactModel.ts";
+import { faker } from "@faker-js/faker";
 
 interface RequestParams {
   id: string;
@@ -58,7 +59,7 @@ export default class ContactController {
   ): Promise<void> {
     const { headers } = req;
     const contactCount = await ContactModel.countDocuments({
-      user: headers?.clientid,
+      user: headers?.userid,
     });
     res.status(200).json(contactCount);
   }
@@ -110,5 +111,39 @@ export default class ContactController {
       status: 200,
       message: `Successfully delete  ${result.deletedCount} contacts`,
     });
+  }
+
+  public async createDemoData(req: Request, res: Response): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const userid: string = req.headers.userid;
+    console.log("userId", userid);
+    try {
+      // eslint-disable-next-line no-inner-declarations
+      function createRandomContact(userId = "6528f805a3b18735c132f163") {
+        return {
+          firstname: faker.person.firstName(),
+          lastname: faker.person.lastName(),
+          dob: faker.date.birthdate(),
+          street: faker.location.streetAddress(),
+          zip: faker.location.zipCode(),
+          city: faker.location.city(),
+          user: userId,
+        };
+      }
+
+      for (let i = 0; i < 10; i++) {
+        const contact = createRandomContact(userid);
+        const res = await ContactModel.create(contact);
+        console.log("res", res);
+      }
+
+      res.status(200).json({
+        status: 200,
+        message: `Successfully delete created demo contacts`,
+      });
+    } catch (error) {
+      console.error("error", error);
+    }
   }
 }

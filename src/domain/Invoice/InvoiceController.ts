@@ -5,7 +5,6 @@ import { StorageClient } from "@supabase/storage-js";
 import Papa from "papaparse";
 import mongoose, { Document } from "mongoose";
 import Pdfjs from "pdfjs-dist";
-import { transformInvoiceData } from "./InvoiceUtilities.js";
 
 const STORAGE_URL = "https://dpoohyfcotuziotpwgbf.supabase.co/storage/v1";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || "";
@@ -122,6 +121,7 @@ export default class UserController {
     res: Response,
   ): Promise<void> {
     const { headers } = req;
+    console.log("invoices count", headers);
     const invoiceCount = await InvoiceModel.countDocuments({
       user: headers?.userid,
     });
@@ -136,12 +136,13 @@ export default class UserController {
     // Take invoice data and create database entry
     const invoice = await InvoiceModel.create(req.body);
     const invoiceData = req.body;
-    console.log("req.body", req.body);
-    await InvoiceService.createPdf(invoiceData);
+    const absolutePathToPdf = await InvoiceService.createPdf(invoiceData);
     console.log(invoice);
-    res
-      .status(201)
-      .json({ status: 201, message: "Successfully created invoice" });
+    res.status(201).json({
+      status: 201,
+      message: "Successfully created invoice",
+      link: absolutePathToPdf,
+    });
     // If invoice was written succesfully to database
     // Create PDF
     // select chosen template

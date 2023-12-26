@@ -8,7 +8,7 @@ export default class ClientController {
   ): Promise<void> {
     const { headers } = req;
     const clients = await ClientModel.find({
-      user: headers?.clientid,
+      user: headers?.userid,
     });
     res.status(200).json(clients);
   }
@@ -19,7 +19,7 @@ export default class ClientController {
   ): Promise<void> {
     const { headers } = req;
     const clientCount = await ClientModel.countDocuments({
-      id: headers?.clientId,
+      user: headers?.userid,
     });
     res.status(200).json(clientCount);
   }
