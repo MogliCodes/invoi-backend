@@ -3,3 +3,6 @@ dist
 .env
 .idea
 tmp
+*.png
+*.html
+*.csv
