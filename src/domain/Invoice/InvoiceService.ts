@@ -35,7 +35,7 @@ type InvoiceData = {
 };
 
 export default class InvoiceService {
-  static async createPdf(invoiceData: InvoiceData): Promise<void> {
+  static async createPdf(invoiceData: InvoiceData): Promise<string> {
     const maxCharsPerPage = 900;
     let currentPageChars = 0;
     let currentPageIndex = 0;
@@ -106,7 +106,7 @@ export default class InvoiceService {
 
     // Save the complete PDF
     const timestamp = Date.now();
-    await this.savePdf(allPagesHtml, timestamp);
+    return await this.savePdf(allPagesHtml, timestamp);
   }
 
   static async processItemsForPage(
@@ -154,20 +154,26 @@ export default class InvoiceService {
     return html;
   }
 
-  static async savePdf(allPagesHtml: string, timestamp: number): Promise<void> {
+  static async savePdf(
+    allPagesHtml: string,
+    timestamp: number,
+  ): Promise<string> {
     const browser = await chromium.launch();
     const page = await browser.newPage();
 
     // Set the page content
     await page.setContent(allPagesHtml);
 
+    const path = `${__dirname}/../../../tmp/invoice-all-pages-${timestamp}.pdf`;
     // Create the PDF
     await page.pdf({
-      path: `${__dirname}/../../../tmp/invoice-all-pages-${timestamp}.pdf`,
+      path: path,
       format: "a4",
     });
 
     // Close the browser
     await browser.close();
+
+    return path;
   }
 }

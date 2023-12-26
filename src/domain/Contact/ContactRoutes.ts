@@ -8,6 +8,7 @@ const router: Router = Router();
 router.get("/count", contactController.getContactsCountByUserId);
 router.get("/:id", contactController.getContactById);
 router.get("/", contactController.getContacts);
+router.post("/demo", contactController.createDemoData);
 router.post("/bulk/delete", contactController.bulkDeleteContacts);
 router.post("/", validateContact, contactController.createContact);
 router.patch("/:id", validateContact, contactController.patchContact);

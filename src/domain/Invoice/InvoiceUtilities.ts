@@ -68,7 +68,7 @@ export function transformInvoiceData(data: InvoiceData): InvoiceData {
 }
 
 export function getDefaultTemplate(): string {
-  return fs.readFileSync(`${__dirname}/template.html`, "utf8");
+  return fs.readFileSync(`${__dirname}/template-single.html`, "utf8");
 }
 
 export function getSubsequentPagesTemplate(): string {
@@ -105,7 +105,6 @@ export function calculatePages(
   items: InvoicePosition[],
   maxCharsPerPage: number,
 ) {
-  let totalCharCount = 0;
   let currentPageCharCount = 0;
   let totalPages = 0;
 
