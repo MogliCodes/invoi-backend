@@ -25,11 +25,11 @@ mongoose.connect(dbUrl);
 
 app.use(bodyParser.json());
 app.use(cors());
-app.use("/api/auth", authRouter);
-app.use("/api/user", authenticate, userRouter);
-app.use("/api/contact", authenticate, contactRouter);
-app.use("/api/client", authenticate, clientRouter);
-app.use("/api/invoice", invoiceRouter);
+app.use("/restapi/auth", authRouter);
+app.use("/restapi/user", authenticate, userRouter);
+app.use("/restapi/contact", authenticate, contactRouter);
+app.use("/restapi/client", authenticate, clientRouter);
+app.use("/restapi/invoice", invoiceRouter);
 
 app.listen(port, () => {
   console.log(`App is listening on port ${port} !`);
