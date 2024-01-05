@@ -21,7 +21,14 @@ const dbUrl: string = process.env.DATABASE_URL || "";
 const app: Application = express();
 const port: number = 8000;
 
-mongoose.connect(dbUrl);
+mongoose
+  .connect(dbUrl)
+  .then(() => {
+    console.log("Connected to the database");
+  })
+  .catch((error) => {
+    console.error("Failed to connect to the database", error);
+  });
 
 app.use(bodyParser.json());
 app.use(cors());

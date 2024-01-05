@@ -2,10 +2,6 @@
 import { faker } from "@faker-js/faker";
 import mongoose from "mongoose";
 
-mongoose.connect(
-  "mongodb+srv://admo_app_2022:doxOmE3CuxEcS3E1@cluster0.ebbqr.mongodb.net/?retryWrites=true&w=majority",
-);
-
 const contactSchema = new mongoose.Schema({
   firstname: {
     type: String,

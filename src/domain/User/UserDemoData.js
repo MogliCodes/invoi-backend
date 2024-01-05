@@ -3,10 +3,6 @@ import { faker } from "@faker-js/faker";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 
-mongoose.connect(
-  "mongodb+srv://admo_app_2022:doxOmE3CuxEcS3E1@cluster0.ebbqr.mongodb.net/?retryWrites=true&w=majority",
-);
-
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
