@@ -26,11 +26,7 @@ type InvoiceData = {
 
 export function transformInvoiceData(data: InvoiceData): InvoiceData {
   const transformedData = { ...data };
-
-  console.log("transformedData", transformedData);
-  // Convert date strings to human-readable format
-  transformedData.items = JSON.parse(data.items.toString());
-  console.log("transformData", transformedData);
+  transformedData.items = data.items;
   transformedData.date = new Date(data.date).toLocaleDateString();
   transformedData.performancePeriodStart = new Date(
     data.performancePeriodStart,
@@ -38,23 +34,6 @@ export function transformInvoiceData(data: InvoiceData): InvoiceData {
   transformedData.performancePeriodEnd = new Date(
     data.performancePeriodEnd,
   ).toLocaleDateString();
-
-  // Format numbers to two decimal places
-  transformedData.total =
-    typeof data.total === "number"
-      ? parseFloat(data.total.toFixed(2))
-      : data.total;
-  transformedData.taxes =
-    typeof data.taxes === "number"
-      ? parseFloat(data.taxes.toFixed(2))
-      : data.taxes;
-  transformedData.totalWithTaxes =
-    typeof data.totalWithTaxes === "number"
-      ? parseFloat(data.totalWithTaxes.toFixed(2))
-      : data.totalWithTaxes;
-
-  // Optionally, you can format other numeric properties in the object as needed
-
   // Format numbers in items array
   transformedData.items = transformedData.items?.map((item) => ({
     ...item,
@@ -63,7 +42,6 @@ export function transformInvoiceData(data: InvoiceData): InvoiceData {
         ? parseFloat(item.total.toFixed(2))
         : item.total,
   }));
-  console.log("IN METHOD", transformedData);
   return transformedData;
 }
 

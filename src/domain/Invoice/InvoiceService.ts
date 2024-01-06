@@ -35,20 +35,23 @@ type InvoiceData = {
   totalWithTaxes: number;
 };
 
+type ClientData = {
+  company: string;
+  street: string;
+  zip: string;
+  city: string;
+};
+
 export default class InvoiceService {
   static async createPdf(
     invoiceData: InvoiceData,
-    clientData: any,
+    clientData: ClientData | any,
   ): Promise<string> {
     const maxCharsPerPage = 900;
     let currentPageChars = 0;
     let currentPageIndex = 0;
-    // Accumulate items for one page
     const itemsForOnePage: InvoicePosition[] = [];
-
-    // Transform the invoice data
     const transformedInvoiceData = transformInvoiceData(invoiceData);
-    console.log("transformedInvoiceData", transformedInvoiceData);
     const numberOfPages = calculatePages(
       transformedInvoiceData.items,
       maxCharsPerPage,
@@ -123,15 +126,13 @@ export default class InvoiceService {
     browser: Browser,
     numberOfPages: number,
     subtotal: number = 0,
-    client: any,
+    client: ClientData,
   ): Promise<string> {
-    // Create a new page for each page
     const page = await browser.newPage();
-
     const isLastPage = currentPageIndex === numberOfPages;
     const isSinglePage = numberOfPages === 1;
-
     const invoiceSenderInfoTemplate = getInvoiceSenderInfoTemplate();
+
     handlebars.registerPartial("invoiceSenderInfo", invoiceSenderInfoTemplate);
 
     const template =
@@ -145,7 +146,7 @@ export default class InvoiceService {
       return {
         ...item,
         factor: item.factor.toLocaleString("de-DE"),
-        hours: item.hours.toLocaleString("de-DE", {
+        hours: (item.hours / 100).toLocaleString("de-DE", {
           style: "currency",
           currency: "EUR",
         }),

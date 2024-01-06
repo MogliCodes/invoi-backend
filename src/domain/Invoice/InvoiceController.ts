@@ -85,6 +85,13 @@ interface ResponseData {
   message: string;
 }
 
+type ClientData = {
+  company: string;
+  street: string;
+  zip: string;
+  city: string;
+};
+
 // Function to convert extracted text to CSV
 function formatTextToCSV(text: string) {
   const rows = text.split("\n");
