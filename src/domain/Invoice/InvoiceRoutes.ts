@@ -10,7 +10,7 @@ const upload = multer({ storage: storage });
 router.get("/", invoiceController.getAllInvoices);
 router.get("/count", invoiceController.getInvoicesCountByUserId);
 
-// TODO: How to PROPERLY nest API routes?
+// TODO: How to PROPERLY nest API api?
 // router.get("/:id", invoiceController.getInvoiceByid);
 router.post("/bulk/delete", invoiceController.bulkDeleteInvoices);
 router.post("/", invoiceController.createInvoice);

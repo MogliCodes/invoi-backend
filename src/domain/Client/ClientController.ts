@@ -29,7 +29,9 @@ export default class ClientController {
   }
 
   public async createClient(req: Request, res: Response): Promise<void> {
-    res.status(201).json({ message: "createClient" });
+    const client = await ClientModel.create(req.body);
+    console.log("client", client);
+    res.status(201).json({ message: "Successfully created client" });
   }
 
   public async editClientById(req: Request, res: Response): Promise<void> {

@@ -6,5 +6,6 @@ const router: Router = Router();
 
 router.get("/", clientController.getAllClientsByUserId);
 router.get("/count", clientController.getClientCountByUserId);
+router.post("/", clientController.createClient);
 
 export default router;

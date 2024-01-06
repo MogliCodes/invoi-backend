@@ -17,6 +17,10 @@ const clientSchema = new mongoose.Schema({
   taxId: {
     type: String,
   },
+  user: {
+    type: String,
+    required: true,
+  },
 });
 const ClientSchema = mongoose.model("Client", clientSchema);
 
