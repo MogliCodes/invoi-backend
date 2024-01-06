@@ -8,6 +8,7 @@ import {
   calculateInvoiceItemCharCount,
   calculatePages,
   getDefaultTemplate,
+  getInvoiceSenderInfoTemplate,
   getLastPageTemplate,
   getSubsequentPagesTemplate,
   transformInvoiceData,
@@ -35,7 +36,10 @@ type InvoiceData = {
 };
 
 export default class InvoiceService {
-  static async createPdf(invoiceData: InvoiceData): Promise<string> {
+  static async createPdf(
+    invoiceData: InvoiceData,
+    clientData: any,
+  ): Promise<string> {
     const maxCharsPerPage = 900;
     let currentPageChars = 0;
     let currentPageIndex = 0;
@@ -79,6 +83,7 @@ export default class InvoiceService {
           browser,
           numberOfPages,
           subtotal,
+          clientData,
         );
         allPagesHtml += pageHtml;
 
@@ -98,6 +103,8 @@ export default class InvoiceService {
       transformedInvoiceData,
       browser,
       numberOfPages,
+      0,
+      clientData,
     );
     allPagesHtml += lastPageHtml;
 
@@ -116,33 +123,69 @@ export default class InvoiceService {
     browser: Browser,
     numberOfPages: number,
     subtotal: number = 0,
+    client: any,
   ): Promise<string> {
     // Create a new page for each page
     const page = await browser.newPage();
 
     const isLastPage = currentPageIndex === numberOfPages;
+    const isSinglePage = numberOfPages === 1;
 
-    const template = isLastPage
-      ? handlebars.compile(getLastPageTemplate())
-      : currentPageIndex === 1
-      ? handlebars.compile(getDefaultTemplate())
-      : handlebars.compile(getSubsequentPagesTemplate());
+    const invoiceSenderInfoTemplate = getInvoiceSenderInfoTemplate();
+    handlebars.registerPartial("invoiceSenderInfo", invoiceSenderInfoTemplate);
+
+    const template =
+      isLastPage && !isSinglePage
+        ? handlebars.compile(getLastPageTemplate(), { noEscape: true })
+        : currentPageIndex === 1 && isSinglePage
+        ? handlebars.compile(getDefaultTemplate(), { noEscape: true })
+        : handlebars.compile(getSubsequentPagesTemplate(), { noEscape: true });
+
+    const formattedItems = itemsForOnePage.map((item) => {
+      return {
+        ...item,
+        factor: item.factor.toLocaleString("de-DE"),
+        hours: item.hours.toLocaleString("de-DE", {
+          style: "currency",
+          currency: "EUR",
+        }),
+        total: (item.total / 100).toLocaleString("de-DE", {
+          style: "currency",
+          currency: "EUR",
+        }),
+      };
+    });
 
     // Render the template
     const html = template({
+      company: client.company,
+      street: client.street,
+      zip: client.zip,
+      city: client.city,
       nr: invoiceData.nr,
-      client: invoiceData.client,
       title: invoiceData.title,
       date: invoiceData.date,
       performancePeriodStart: invoiceData.performancePeriodStart,
       performancePeriodEnd: invoiceData.performancePeriodEnd,
-      items: itemsForOnePage,
+      items: formattedItems,
       currentPage: currentPageIndex,
       pageCount: numberOfPages,
-      total: invoiceData.total,
-      taxes: invoiceData.taxes,
-      totalWithTaxes: invoiceData.totalWithTaxes,
-      subtotal: subtotal,
+      total: (invoiceData.total / 100).toLocaleString("de-DE", {
+        style: "currency",
+        currency: "EUR",
+      }),
+      taxes: (invoiceData.taxes / 100).toLocaleString("de-DE", {
+        style: "currency",
+        currency: "EUR",
+      }),
+      totalWithTaxes: (invoiceData.totalWithTaxes / 100).toLocaleString(
+        "de-DE",
+        { style: "currency", currency: "EUR" },
+      ),
+      subtotal: subtotal.toLocaleString("de-DE", {
+        style: "currency",
+        currency: "EUR",
+      }),
     });
 
     // Set the page content

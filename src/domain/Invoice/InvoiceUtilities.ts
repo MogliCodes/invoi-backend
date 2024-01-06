@@ -68,15 +68,25 @@ export function transformInvoiceData(data: InvoiceData): InvoiceData {
 }
 
 export function getDefaultTemplate(): string {
+  console.log("template-single.html used");
   return fs.readFileSync(`${__dirname}/template-single.html`, "utf8");
 }
 
 export function getSubsequentPagesTemplate(): string {
+  console.log("template-subsequent.html used");
   return fs.readFileSync(`${__dirname}/template-subsequent.html`, "utf8");
 }
 
 export function getLastPageTemplate(): string {
+  console.log("template-last-page.html used");
   return fs.readFileSync(`${__dirname}/template-last-page.html`, "utf8");
+}
+
+export function getInvoiceSenderInfoTemplate(): string {
+  return fs.readFileSync(
+    `${__dirname}/partials/template-invoice-sender-info.html`,
+    "utf8",
+  );
 }
 
 export function saveTemplateHtml(templateHtml: any): void {

@@ -5,7 +5,10 @@ import { StorageClient } from "@supabase/storage-js";
 import Papa from "papaparse";
 import mongoose, { Document } from "mongoose";
 import Pdfjs from "pdfjs-dist";
+import ClientController from "../Client/ClientController.js";
+import ClientModel from "../Client/ClientModel.js";
 
+const clientController = new ClientController();
 const STORAGE_URL = "https://dpoohyfcotuziotpwgbf.supabase.co/storage/v1";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || "";
 const csvSchema = new mongoose.Schema({
@@ -136,7 +139,16 @@ export default class UserController {
     // Take invoice data and create database entry
     const invoice = await InvoiceModel.create(req.body);
     const invoiceData = req.body;
-    const absolutePathToPdf = await InvoiceService.createPdf(invoiceData);
+    const { headers } = req;
+    const clientData = await ClientModel.findOne({
+      user: headers?.userid,
+      _id: invoiceData.client,
+    });
+    console.log("THIS IS CLIENT DATA", clientData);
+    const absolutePathToPdf = await InvoiceService.createPdf(
+      invoiceData,
+      clientData,
+    );
     console.log(invoice);
     res.status(201).json({
       status: 201,
@@ -309,7 +321,13 @@ export default class UserController {
   public async createInvoicePdf(req: Request, res: Response): Promise<void> {
     console.log("req.body", req.body);
     const invoiceData = req.body;
-    await InvoiceService.createPdf(invoiceData);
+    const { headers } = req;
+    const clientData = await ClientModel.findOne({
+      user: headers?.userid,
+      _id: invoiceData.client,
+    });
+    console.log("clientData", clientData);
+    await InvoiceService.createPdf(invoiceData, clientData);
     res.json({ message: "Created pdf" });
   }
 
