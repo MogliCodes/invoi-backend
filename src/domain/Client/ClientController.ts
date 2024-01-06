@@ -25,17 +25,39 @@ export default class ClientController {
   }
 
   public async getClientById(req: Request, res: Response): Promise<void> {
-    res.status(200).json({ message: "getCliebtById" });
+    const { headers } = req;
+    const { id } = req.params;
+    const client = await ClientModel.findOne({
+      user: headers?.userid,
+      _id: id,
+    });
+    res.status(200).json(client);
   }
 
   public async createClient(req: Request, res: Response): Promise<void> {
     const client = await ClientModel.create(req.body);
     console.log("client", client);
-    res.status(201).json({ message: "Successfully created client" });
+    res
+      .status(201)
+      .json({ status: 201, message: "Successfully created client" });
   }
 
   public async editClientById(req: Request, res: Response): Promise<void> {
-    res.status(200).json({ message: "editClient" });
+    const query = { _id: req.params.id };
+    const options = { upsert: true };
+    const updatedClient = req.body;
+
+    const result = ClientModel.updateOne(query, updatedClient, options)
+      .then((result) => {
+        const { matchedCount, modifiedCount } = result;
+        if (matchedCount && modifiedCount) {
+          console.log(`Successfully added a new review.`);
+        }
+      })
+      .catch((err) => console.error(`Failed to add review: ${err}`));
+    res
+      .status(200)
+      .json({ status: 200, message: "Successfully patched contact" });
   }
 
   public async deleteClientById(req: Request, res: Response): Promise<void> {
