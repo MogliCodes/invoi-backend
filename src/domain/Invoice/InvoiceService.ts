@@ -49,6 +49,7 @@ export default class InvoiceService {
   static async createPdf(
     invoiceData: InvoiceData,
     clientData: ClientData | any,
+    settingsData: any,
   ): Promise<string> {
     const maxCharsPerPage = 900;
     let currentPageChars = 0;
@@ -95,6 +96,7 @@ export default class InvoiceService {
           numberOfPages,
           subtotal,
           clientData,
+          settingsData,
         );
         allPagesHtml += pageHtml;
 
@@ -116,6 +118,7 @@ export default class InvoiceService {
       numberOfPages,
       0,
       clientData,
+      settingsData,
     );
     allPagesHtml += lastPageHtml;
 
@@ -135,6 +138,7 @@ export default class InvoiceService {
     numberOfPages: number,
     subtotal: number = 0,
     client: ClientData,
+    settingsData: any,
   ): Promise<string> {
     const page = await browser.newPage();
     const isLastPage = currentPageIndex === numberOfPages;
@@ -172,7 +176,7 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
     const additionalText = invoiceData.isReverseChargeInvoice
       ? additionalTextReverseCharge
       : additionalTextDefault;
-
+    console.log("settingsData", settingsData);
     // Render the template
     const html = template({
       company: client.company,
@@ -204,6 +208,16 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
         currency: "EUR",
       }),
       additionalText: additionalText,
+      userFullName: `${settingsData.firstname} ${settingsData.lastname}`,
+      userStreet: settingsData.street,
+      userZipCode: settingsData.zipCode,
+      userCity: settingsData.city,
+      userPhone: settingsData.phone,
+      userEmail: settingsData.email,
+      userBankName: settingsData.bankName,
+      userIban: settingsData.iban,
+      userBic: settingsData.bic,
+      userTaxId: settingsData.taxId,
     });
 
     await page.setContent(html);

@@ -8,6 +8,7 @@ import Pdfjs from "pdfjs-dist";
 import ClientController from "../Client/ClientController.js";
 import ClientModel from "../Client/ClientModel.js";
 import { consola } from "consola";
+import SettingsModel from "../Settings/SettingsModel.ts";
 
 const clientController = new ClientController();
 const STORAGE_URL = "https://dpoohyfcotuziotpwgbf.supabase.co/storage/v1";
@@ -156,10 +157,14 @@ export default class UserController {
       user: headers?.userid,
       _id: invoiceData.client,
     });
+    const settingsData = await SettingsModel.findOne({
+      user: headers?.userid,
+    });
     consola.box(clientData);
     const absolutePathToPdf = await InvoiceService.createPdf(
       invoiceData,
       clientData,
+      settingsData,
     );
     console.log(invoice);
     res.status(201).json({
@@ -337,7 +342,11 @@ export default class UserController {
       user: headers?.userid,
       _id: invoiceData.client,
     });
-    await InvoiceService.createPdf(invoiceData, clientData);
+
+    const settingsData = await SettingsModel.findOne({
+      user: headers?.userid,
+    });
+    await InvoiceService.createPdf(invoiceData, clientData, settingsData);
     consola.success("Created pdf");
     res.json({ message: "Created pdf" });
   }
