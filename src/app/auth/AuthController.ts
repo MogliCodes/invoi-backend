@@ -38,27 +38,31 @@ export default class AuthController {
   }
   public async login(req: Request, res: Response) {
     const { username, password } = req.body;
-    const user = await UserModel.findOne().where("username").equals(username);
-    if (!user) throw Error("No user found");
+    try {
+      const user = await UserModel.findOne().where("username").equals(username);
+      if (!user) throw Error("No user found");
 
-    const isPasswordMatch = await bcrypt.compare(
-      password,
-      user?.password || "",
-    );
+      const isPasswordMatch = await bcrypt.compare(
+        password,
+        user?.password || "",
+      );
 
-    let token;
-    if (isPasswordMatch) {
-      console.log("MATCH");
-      // Generate a JWT token
-      token = jwt.sign({ id: user.id, username: user.username }, jwtSecret, {
-        expiresIn: "30d",
-      });
-      res
-        .status(200)
-        .json({ id: user.id, username: user.username, token: token });
-    } else {
-      console.log("NOOOO");
-      res.status(200).json({ error: "Password does not match" });
+      let token;
+      if (isPasswordMatch) {
+        console.log("MATCH");
+        // Generate a JWT token
+        token = jwt.sign({ id: user.id, username: user.username }, jwtSecret, {
+          expiresIn: "30d",
+        });
+        res
+          .status(200)
+          .json({ id: user.id, username: user.username, token: token });
+      } else {
+        console.log("NOOOO");
+        res.status(401).json({ status: 401, error: "Password does not match" });
+      }
+    } catch (error) {
+      console.error(error);
     }
   }
 }

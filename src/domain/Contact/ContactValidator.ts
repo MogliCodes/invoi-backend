@@ -14,7 +14,6 @@ export const validateContact = (
   res: Response,
   next: NextFunction,
 ): void => {
-  console.log("req.body", req.body);
   Promise.all(contactValidationChain.map((validation) => validation.run(req)))
     .then(() => {
       const errors = validationResult(req);

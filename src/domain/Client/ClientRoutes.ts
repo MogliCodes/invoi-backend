@@ -5,8 +5,8 @@ const clientController = new ClientController();
 const router: Router = Router();
 
 router.get("/", clientController.getAllClientsByUserId);
-router.get("/:id", clientController.getClientById);
 router.get("/count", clientController.getClientCountByUserId);
+router.get("/:id", clientController.getClientById);
 router.post("/", clientController.createClient);
 router.patch("/:id", clientController.editClientById);
 

@@ -119,7 +119,6 @@ export default class UserController {
   ): Promise<void> {
     const { page, pageSize } = req.query;
     const { headers } = req;
-    console.log("headers", headers);
     const clients = await InvoiceModel.find({ user: headers.userid })
       .sort({ ["nr"]: 1 })
       .skip((page - 1) * pageSize)
@@ -130,12 +129,16 @@ export default class UserController {
     req: Request,
     res: Response,
   ): Promise<void> {
-    const { headers } = req;
-    console.log("invoices count", headers);
-    const invoiceCount = await InvoiceModel.countDocuments({
-      user: headers?.userid,
-    });
-    res.status(200).json(invoiceCount);
+    try {
+      const { headers } = req;
+      const invoiceCount = await InvoiceModel.countDocuments({
+        user: headers?.userid,
+      });
+      res.status(200).json(invoiceCount);
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ message: "Error getting invoice count" });
+    }
   }
 
   public async getInvoiceByid(req: Request, res: Response): Promise<void> {

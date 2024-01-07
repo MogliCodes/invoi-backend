@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { consola } from "consola";
+
 export const jwtSecret = "your-secret-key";
 export const jwtExpiration = "1h";
 
@@ -40,7 +42,6 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
   if (!user) {
     return res.status(401).json({ message: "Invalid token" });
   }
-  console.info("valid token provided");
   req.user = user;
   next();
 }

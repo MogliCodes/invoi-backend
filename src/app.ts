@@ -11,6 +11,8 @@ import clientRouter from "./domain/Client/ClientRoutes.ts";
 import invoiceRouter from "./domain/Invoice/InvoiceRoutes.ts";
 import { authenticate } from "./app/middleware/auth.ts";
 import { StorageController } from "./domain/Storage/StorageController.ts";
+import { consola } from "consola";
+import { logger } from "./app/middleware/logging.ts";
 
 const storageController = new StorageController();
 storageController.getStorageInfo();
@@ -24,14 +26,15 @@ const port: number = 8000;
 mongoose
   .connect(dbUrl)
   .then(() => {
-    console.log("Connected to the database");
+    consola.success("Connected to the database");
   })
   .catch((error) => {
-    console.error("Failed to connect to the database", error);
+    consola.error(new Error(error));
   });
 
 app.use(bodyParser.json());
 app.use(cors());
+app.use(logger);
 app.use("/restapi/auth", authRouter);
 app.use("/restapi/user", authenticate, userRouter);
 app.use("/restapi/contact", authenticate, contactRouter);
@@ -39,5 +42,5 @@ app.use("/restapi/client", authenticate, clientRouter);
 app.use("/restapi/invoice", invoiceRouter);
 
 app.listen(port, () => {
-  console.log(`App is listening on port ${port} !`);
+  consola.success(`App is listening on port ${port}`);
 });

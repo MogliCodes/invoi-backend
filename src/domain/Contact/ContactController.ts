@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import ContactModel from "./ContactModel.ts";
 import { faker } from "@faker-js/faker";
+import { consola } from "consola";
 
 interface RequestParams {
   id: string;
@@ -44,8 +45,6 @@ export default class ContactController {
   ): Promise<void> {
     const { headers } = req;
     const { id } = req.params;
-    console.log("headers?.clientId", headers?.clientid);
-    console.log("getContactById", id);
     const contact = await ContactModel.findOne({
       user: headers?.clientid,
       _id: id,
@@ -57,16 +56,21 @@ export default class ContactController {
     req: Request,
     res: Response,
   ): Promise<void> {
-    const { headers } = req;
-    const contactCount = await ContactModel.countDocuments({
-      user: headers?.userid,
-    });
-    res.status(200).json(contactCount);
+    try {
+      const { headers } = req;
+      const contactCount = await ContactModel.countDocuments({
+        user: headers?.userid,
+      });
+      res.status(200).json(contactCount);
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ message: "Error getting contact count" });
+    }
   }
 
   public async createContact(req: Request, res: Response): Promise<void> {
     const contact = await ContactModel.create(req.body);
-    console.log(contact);
+    consola.box(contact);
     res
       .status(201)
       .json({ status: 201, message: "Successfully created contact" });
@@ -91,16 +95,19 @@ export default class ContactController {
   }
 
   public async deleteContact(req: Request, res: Response): Promise<void> {
-    console.log("EXPRESS SERVER");
-    console.log("req.params.id", req.params.id);
-    const query = { _id: req.params.id };
-
-    const result = ContactModel.deleteOne(query).catch((err) =>
-      console.error(`Failed to add review: ${err}`),
-    );
-    res
-      .status(200)
-      .json({ status: 200, message: "Successfully deleted contact" });
+    try {
+      const query = { _id: req.params.id };
+      const result = ContactModel.deleteOne(query).catch((err) =>
+        console.error(`Failed to add review: ${err}`),
+      );
+      consola.success(`Successfully deleted contact ${req.params.id}`);
+      res
+        .status(200)
+        .json({ status: 200, message: "Successfully deleted contact" });
+    } catch (err) {
+      consola.error(err);
+      res.status(500).json({ message: "Error deleting contact" });
+    }
   }
 
   public async bulkDeleteContacts(req: Request, res: Response): Promise<void> {

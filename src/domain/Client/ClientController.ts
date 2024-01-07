@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import ClientModel from "./ClientModel.ts";
+import { he } from "@faker-js/faker";
 
 export default class ClientController {
   public async getAllClientsByUserId(
@@ -17,11 +18,16 @@ export default class ClientController {
     req: Request,
     res: Response,
   ): Promise<void> {
-    const { headers } = req;
-    const clientCount = await ClientModel.countDocuments({
-      user: headers?.userid,
-    });
-    res.status(200).json(clientCount);
+    try {
+      const { headers } = req;
+      const clientCount = await ClientModel.countDocuments({
+        user: headers?.userid,
+      });
+      res.status(200).json(clientCount);
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ message: "Error getting client count" });
+    }
   }
 
   public async getClientById(req: Request, res: Response): Promise<void> {

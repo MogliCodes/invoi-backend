@@ -5,7 +5,6 @@ import ContactModel from "../Contact/ContactModel.js";
 export default class UserController {
   public async getAllUsers(req: Request, res: Response): Promise<void> {
     const users = await UserModel.find();
-    console.log("users", users);
     res.status(200).json(users);
   }
 
@@ -24,10 +23,10 @@ export default class UserController {
       .then((result) => {
         const { matchedCount, modifiedCount } = result;
         if (matchedCount && modifiedCount) {
-          console.log(`Successfully added a new review.`);
+          console.log(`Successfully patched user.`);
         }
       })
-      .catch((err) => console.error(`Failed to add review: ${err}`));
+      .catch((err) => console.error(`Failed to patch user: ${err}`));
     res
       .status(200)
       .json({ status: 200, message: "Successfully patched contact" });
