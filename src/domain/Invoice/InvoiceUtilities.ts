@@ -1,6 +1,8 @@
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { template } from "handlebars";
+import { consola } from "consola";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -22,11 +24,19 @@ type InvoiceData = {
   total: number;
   taxes: number;
   totalWithTaxes: number;
+  isReverseChargeInvoice: boolean;
+};
+
+type ClientData = {
+  company: string;
+  street: string;
+  zip: string;
+  city: string;
 };
 
 export function transformInvoiceData(data: InvoiceData): InvoiceData {
   const transformedData = { ...data };
-  transformedData.items = data.items;
+  transformedData.items = JSON.parse(data.items.toString());
   transformedData.date = new Date(data.date).toLocaleDateString();
   transformedData.performancePeriodStart = new Date(
     data.performancePeriodStart,
@@ -46,17 +56,17 @@ export function transformInvoiceData(data: InvoiceData): InvoiceData {
 }
 
 export function getDefaultTemplate(): string {
-  console.log("template-single.html used");
+  consola.info("template-single.html used");
   return fs.readFileSync(`${__dirname}/template-single.html`, "utf8");
 }
 
 export function getSubsequentPagesTemplate(): string {
-  console.log("template-subsequent.html used");
+  consola.info("template-subsequent.html used");
   return fs.readFileSync(`${__dirname}/template-subsequent.html`, "utf8");
 }
 
 export function getLastPageTemplate(): string {
-  console.log("template-last-page.html used");
+  consola.info("template-last-page.html used");
   return fs.readFileSync(`${__dirname}/template-last-page.html`, "utf8");
 }
 
@@ -118,4 +128,14 @@ export function calculatePages(
 function calculateItemCharCount(item: InvoicePosition) {
   // Implement your logic to calculate the character count for each item
   return item.description.length;
+}
+
+export function generateFileName(
+  clientData: ClientData,
+  invoiceData: InvoiceData,
+) {
+  return `${invoiceData.nr}_${clientData.company.replace(
+    / /g,
+    "-",
+  )}_${invoiceData.title.replace(/ /g, "-")}.pdf`;
 }

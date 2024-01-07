@@ -7,6 +7,7 @@ import mongoose, { Document } from "mongoose";
 import Pdfjs from "pdfjs-dist";
 import ClientController from "../Client/ClientController.js";
 import ClientModel from "../Client/ClientModel.js";
+import { consola } from "consola";
 
 const clientController = new ClientController();
 const STORAGE_URL = "https://dpoohyfcotuziotpwgbf.supabase.co/storage/v1";
@@ -149,12 +150,13 @@ export default class UserController {
     // Take invoice data and create database entry
     const invoice = await InvoiceModel.create(req.body);
     const invoiceData = req.body;
+    consola.box(JSON.stringify(invoiceData));
     const { headers } = req;
     const clientData = await ClientModel.findOne({
       user: headers?.userid,
       _id: invoiceData.client,
     });
-    console.log("THIS IS CLIENT DATA", clientData);
+    consola.box(clientData);
     const absolutePathToPdf = await InvoiceService.createPdf(
       invoiceData,
       clientData,
@@ -329,15 +331,14 @@ export default class UserController {
   }
 
   public async createInvoicePdf(req: Request, res: Response): Promise<void> {
-    console.log("req.body", req.body);
     const invoiceData = req.body;
     const { headers } = req;
     const clientData = await ClientModel.findOne({
       user: headers?.userid,
       _id: invoiceData.client,
     });
-    console.log("clientData", clientData);
     await InvoiceService.createPdf(invoiceData, clientData);
+    consola.success("Created pdf");
     res.json({ message: "Created pdf" });
   }
 

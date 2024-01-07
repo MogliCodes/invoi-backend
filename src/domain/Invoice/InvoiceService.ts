@@ -7,12 +7,14 @@ import handlebars from "handlebars";
 import {
   calculateInvoiceItemCharCount,
   calculatePages,
+  generateFileName,
   getDefaultTemplate,
   getInvoiceSenderInfoTemplate,
   getLastPageTemplate,
   getSubsequentPagesTemplate,
   transformInvoiceData,
 } from "./InvoiceUtilities.ts";
+import { consola } from "consola";
 
 type InvoicePosition = {
   position: number;
@@ -33,6 +35,7 @@ type InvoiceData = {
   total: number;
   taxes: number;
   totalWithTaxes: number;
+  isReverseChargeInvoice: boolean;
 };
 
 type ClientData = {
@@ -52,9 +55,14 @@ export default class InvoiceService {
     let currentPageIndex = 0;
     const itemsForOnePage: InvoicePosition[] = [];
     const transformedInvoiceData = transformInvoiceData(invoiceData);
+    const { isReverseChargeInvoice } = transformedInvoiceData;
     const numberOfPages = calculatePages(
       transformedInvoiceData.items,
       maxCharsPerPage,
+    );
+
+    consola.info(
+      isReverseChargeInvoice ? "Reverse charged invoice" : "Normal invoice",
     );
 
     // Create a browser instance
@@ -116,7 +124,7 @@ export default class InvoiceService {
 
     // Save the complete PDF
     const timestamp = Date.now();
-    return await this.savePdf(allPagesHtml, timestamp);
+    return await this.savePdf(allPagesHtml, timestamp, clientData, invoiceData);
   }
 
   static async processItemsForPage(
@@ -157,6 +165,14 @@ export default class InvoiceService {
       };
     });
 
+    const additionalTextDefault = `Bitte überweisen Sie den Rechnungsbetrag innerhalb von 14 Tagen nach Erhalt dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zusammenarbeit.`;
+    const additionalTextReverseCharge = `Die Steuerschuld geht auf den Leistungsempfänger über. Bitte überweisen Sie den Rechnungsbetrag innerhalb von 14 Tagen nach Erhalt
+dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zusammenarbeit.`;
+
+    const additionalText = invoiceData.isReverseChargeInvoice
+      ? additionalTextReverseCharge
+      : additionalTextDefault;
+
     // Render the template
     const html = template({
       company: client.company,
@@ -187,12 +203,10 @@ export default class InvoiceService {
         style: "currency",
         currency: "EUR",
       }),
+      additionalText: additionalText,
     });
 
-    // Set the page content
     await page.setContent(html);
-
-    // Close the page
     await page.close();
 
     return html;
@@ -201,21 +215,19 @@ export default class InvoiceService {
   static async savePdf(
     allPagesHtml: string,
     timestamp: number,
+    clientData: ClientData,
+    invoiceData: InvoiceData,
   ): Promise<string> {
     const browser = await chromium.launch();
     const page = await browser.newPage();
+    const fileName = generateFileName(clientData, invoiceData);
+    const path = `${__dirname}/../../../tmp/${fileName}`;
 
-    // Set the page content
     await page.setContent(allPagesHtml);
-
-    const path = `${__dirname}/../../../tmp/invoice-all-pages-${timestamp}.pdf`;
-    // Create the PDF
     await page.pdf({
       path: path,
       format: "a4",
     });
-
-    // Close the browser
     await browser.close();
 
     return path;
