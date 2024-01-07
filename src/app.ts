@@ -9,6 +9,7 @@ import userRouter from "./domain/User/UserRoutes.ts";
 import contactRouter from "./domain/Contact/ContactRoutes.ts";
 import clientRouter from "./domain/Client/ClientRoutes.ts";
 import invoiceRouter from "./domain/Invoice/InvoiceRoutes.ts";
+import settingsRouter from "./domain/Settings/SettingsRoutes.ts";
 import { authenticate } from "./app/middleware/auth.ts";
 import { StorageController } from "./domain/Storage/StorageController.ts";
 import { consola } from "consola";
@@ -40,6 +41,7 @@ app.use("/restapi/user", authenticate, userRouter);
 app.use("/restapi/contact", authenticate, contactRouter);
 app.use("/restapi/client", authenticate, clientRouter);
 app.use("/restapi/invoice", invoiceRouter);
+app.use("/restapi/settings", settingsRouter);
 
 app.listen(port, () => {
   consola.success(`App is listening on port ${port}`);

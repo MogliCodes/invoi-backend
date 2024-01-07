@@ -5,9 +5,19 @@ const settingsSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  username: {
+    type: String,
+    required: true,
+  },
   email: {
     type: String,
     required: true,
+  },
+  firstname: {
+    type: String,
+  },
+  lastname: {
+    type: String,
   },
   street: {
     type: String,
@@ -21,7 +31,16 @@ const settingsSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  bank: {
+  phone: {
+    type: String,
+  },
+  taxId: {
+    type: String,
+  },
+  vatId: {
+    type: String,
+  },
+  bankName: {
     type: String,
     required: true,
   },
