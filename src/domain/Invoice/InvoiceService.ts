@@ -15,6 +15,7 @@ import {
   transformInvoiceData,
 } from "./InvoiceUtilities.ts";
 import { consola } from "consola";
+import fs from "fs";
 
 type InvoicePosition = {
   position: number;
@@ -235,7 +236,14 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
     const browser = await chromium.launch();
     const page = await browser.newPage();
     const fileName = generateFileName(clientData, invoiceData);
-    const path = `${__dirname}/../../../tmp/${fileName}`;
+    const year = fileName.slice(0, 4);
+    const yearDirectoryPath = `${__dirname}/../../../tmp/${year}`;
+    const directoryForYearExists = fs.existsSync(yearDirectoryPath);
+    const path = `${__dirname}/../../../tmp/${year}/${fileName}`;
+
+    if (!directoryForYearExists) {
+      fs.mkdirSync(yearDirectoryPath);
+    }
 
     await page.setContent(allPagesHtml);
     await page.pdf({

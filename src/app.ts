@@ -16,13 +16,12 @@ import { consola } from "consola";
 import { logger } from "./app/middleware/logging.ts";
 
 const storageController = new StorageController();
-storageController.getStorageInfo();
-
-config({ path: "../.env" });
-
 const dbUrl: string = process.env.DATABASE_URL || "";
 const app: Application = express();
 const port: number = 8000;
+
+config({ path: "../.env" });
+storageController.getStorageInfo();
 
 mongoose
   .connect(dbUrl)
@@ -32,7 +31,10 @@ mongoose
   .catch((error) => {
     consola.error(new Error(error));
   });
-
+app.use((req, res, next) => {
+  res.locals.baseUrl = req.protocol + "://" + req.get("host");
+  next();
+});
 app.use(bodyParser.json());
 app.use(cors());
 app.use(logger);

@@ -151,7 +151,6 @@ export default class UserController {
     // Take invoice data and create database entry
     const invoice = await InvoiceModel.create(req.body);
     const invoiceData = req.body;
-    consola.box(JSON.stringify(invoiceData));
     const { headers } = req;
     const clientData = await ClientModel.findOne({
       user: headers?.userid,
@@ -160,22 +159,18 @@ export default class UserController {
     const settingsData = await SettingsModel.findOne({
       user: headers?.userid,
     });
-    consola.box(clientData);
     const absolutePathToPdf = await InvoiceService.createPdf(
       invoiceData,
       clientData,
       settingsData,
     );
-    console.log(invoice);
+    consola.success(`Created invoice at path: ${absolutePathToPdf}`);
     res.status(201).json({
       status: 201,
       message: "Successfully created invoice",
       link: absolutePathToPdf,
+      invoice,
     });
-    // If invoice was written succesfully to database
-    // Create PDF
-    // select chosen template
-    // Upload PDF to supabase storage
   }
 
   public async uploadInvoicePdfTemplate(
@@ -360,9 +355,12 @@ export default class UserController {
 
   public async bulkDeleteInvoices(req: Request, res: Response): Promise<void> {
     const invoices = req.body;
-    console.log(invoices);
-    console.log("invoices", req.body);
     await InvoiceModel.deleteMany({ _id: { $in: invoices } });
+    consola.info(
+      `Successfully deleted invoices with the following ids: ${invoices.join(
+        ", ",
+      )}`,
+    );
     res.json({ message: "Deleted invoices" });
   }
 }
