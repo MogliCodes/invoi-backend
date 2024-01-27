@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import UserModel from "../../domain/User/UserModel.ts";
 import jwt from "jsonwebtoken";
+import { consola } from "consola";
 const jwtSecret = "your-secret-key";
 
 export default class AuthController {
@@ -15,9 +16,10 @@ export default class AuthController {
         .where("username")
         .equals(username);
 
-      console.log("userExists", userExists);
+      consola.info("userExists", userExists);
 
       if (userExists) {
+        consola.info(`Username ${username} already exists`);
         res.status(409).json({
           error: "User already exists",
           message:
@@ -49,7 +51,7 @@ export default class AuthController {
 
       let token;
       if (isPasswordMatch) {
-        console.log("MATCH");
+        consola.info(`Succesful login by ${username}`);
         // Generate a JWT token
         token = jwt.sign({ id: user.id, username: user.username }, jwtSecret, {
           expiresIn: "30d",
