@@ -7,7 +7,9 @@
 
 ## Prerequisites
 
-- node >=18 <19
+- Git
+- Node.js >=18 <19
+- pnpm
 
 ## Install
 
