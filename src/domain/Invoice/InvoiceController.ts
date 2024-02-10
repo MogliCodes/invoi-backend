@@ -159,18 +159,23 @@ export default class UserController {
     const settingsData = await SettingsModel.findOne({
       user: headers?.userid,
     });
-    const absolutePathToPdf = await InvoiceService.createPdf(
-      invoiceData,
-      clientData,
-      settingsData,
-    );
-    consola.success(`Created invoice at path: ${absolutePathToPdf}`);
-    res.status(201).json({
-      status: 201,
-      message: "Successfully created invoice",
-      link: absolutePathToPdf,
-      invoice,
-    });
+    try {
+      const absolutePathToPdf = await InvoiceService.createPdf(
+        invoiceData,
+        clientData,
+        settingsData,
+      );
+      consola.success(`Created invoice at path: ${absolutePathToPdf}`);
+      res.status(201).json({
+        status: 201,
+        message: "Successfully created invoice",
+        link: absolutePathToPdf,
+        invoice,
+      });
+    } catch (error) {
+      consola.error(error);
+      res.status(500).json({ error: "Error creating invoice" });
+    }
   }
 
   public async uploadInvoicePdfTemplate(

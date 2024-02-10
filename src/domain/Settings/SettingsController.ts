@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import SettingsModel from "./SettingsModel.ts";
+import { consola } from "consola";
 export default class SettingsController {
   public async getSettings(req: Request, res: Response): Promise<void> {
     const { headers } = req;
@@ -13,14 +14,20 @@ export default class SettingsController {
   }
 
   public async updateSettings(req: Request, res: Response): Promise<void> {
-    const { headers } = req;
-    const settings = await SettingsModel.findOneAndUpdate(
-      { user: headers.userid },
-      req.body,
-      { new: true },
-    );
-    res
-      .status(201)
-      .json({ status: 201, message: "updateSettings", data: settings });
+    try {
+      const { headers } = req;
+      const settings = await SettingsModel.findOneAndUpdate(
+        { user: headers.userid },
+        req.body,
+        { new: true },
+      );
+      res
+        .status(201)
+        .json({ status: 201, message: "updateSettings", data: settings });
+    } catch (error: unknown) {
+      consola.error("Error while updating settings");
+      // @ts-ignore
+      res.status(500).json({ status: 500, message: error.message });
+    }
   }
 }
