@@ -1,17 +1,23 @@
 import { Request, Response } from "express";
 import ClientModel from "./ClientModel.ts";
 import { he } from "@faker-js/faker";
+import { consola } from "consola";
 
 export default class ClientController {
   public async getAllClientsByUserId(
     req: Request,
     res: Response,
   ): Promise<void> {
-    const { headers } = req;
-    const clients = await ClientModel.find({
-      user: headers?.userid,
-    });
-    res.status(200).json(clients);
+    try {
+      const { headers } = req;
+      const clients = await ClientModel.find({
+        user: headers?.userid,
+      });
+      res.status(200).json(clients);
+    } catch (err) {
+      consola.log(err);
+      res.status(500).json({ message: "Error getting clients" });
+    }
   }
 
   public async getClientCountByUserId(
@@ -31,13 +37,18 @@ export default class ClientController {
   }
 
   public async getClientById(req: Request, res: Response): Promise<void> {
-    const { headers } = req;
-    const { id } = req.params;
-    const client = await ClientModel.findOne({
-      user: headers?.userid,
-      _id: id,
-    });
-    res.status(200).json(client);
+    try {
+      const { headers } = req;
+      const { id } = req.params;
+      const client = await ClientModel.findOne({
+        user: headers?.userid,
+        _id: id,
+      });
+      res.status(200).json(client);
+    } catch (error) {
+      consola.log(error);
+      res.status(500).json({ message: "Error getting client" });
+    }
   }
 
   public async createClient(req: Request, res: Response): Promise<void> {
