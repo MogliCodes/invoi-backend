@@ -29,15 +29,12 @@ export default class ContactController {
   ): Promise<void> {
     const { headers } = req;
     const { page, pageSize, search } = req.query;
-    console.log("page", page);
-    console.log("pageSize", pageSize);
     const contacts = await ContactModel.find({
       user: headers?.userid,
     })
       .sort({ ["lastname"]: 1 })
       .skip((page - 1) * pageSize)
       .limit(pageSize);
-    console.log("contacts", contacts);
     res.status(200).json(contacts);
   }
 
