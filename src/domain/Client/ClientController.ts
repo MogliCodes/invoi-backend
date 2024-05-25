@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import ClientModel from "./ClientModel.ts";
-import { he } from "@faker-js/faker";
+import { faker, he } from "@faker-js/faker";
 import { consola } from "consola";
 
 export default class ClientController {
@@ -79,5 +79,35 @@ export default class ClientController {
 
   public async deleteClientById(req: Request, res: Response): Promise<void> {
     res.status(200).json({ message: "deleteClient" });
+  }
+
+  public async createDemoClients(req: Request, res: Response): Promise<void> {
+    const user = req.headers.userid;
+    console.log(user);
+    try {
+      function createRandomClient() {
+        return {
+          company: faker.company.name(),
+          street: faker.location.streetAddress(),
+          zip: faker.location.zipCode(),
+          city: faker.location.city(),
+          taxId: faker.finance.iban(),
+          user,
+        };
+      }
+
+      for (let i = 0; i < 10; i++) {
+        const client = createRandomClient();
+        const res = await ClientModel.create(client);
+        console.log("client", res);
+      }
+
+      res
+        .status(201)
+        .json({ status: 201, message: "Successfully created demo clients" });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Error creating demo clients" });
+    }
   }
 }
