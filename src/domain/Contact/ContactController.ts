@@ -45,7 +45,7 @@ export default class ContactController {
     const { headers } = req;
     const { id } = req.params;
     const contact = await ContactModel.findOne({
-      user: headers?.clientid,
+      user: headers?.userid,
       _id: id,
     });
     res.status(200).json(contact);
