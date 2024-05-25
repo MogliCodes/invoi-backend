@@ -445,4 +445,78 @@ export default class UserController {
 
     res.status(200).json(total);
   }
+
+  public async getTaxOfCurrentMonth(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    const { headers } = req;
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const invoices = await InvoiceModel.find({
+      user: headers.userid,
+      date: {
+        $gte: new Date(currentYear, currentMonth, 1),
+        $lt: new Date(currentYear, currentMonth + 1, 0),
+      },
+    });
+
+    // Accumulate the total of all invoices
+    // @ts-ignore
+    const total = invoices.reduce(
+      (acc, invoice) => acc + parseInt(invoice?.taxes || ""),
+      0,
+    );
+    console.log("total", total);
+    res.status(200).json(total);
+  }
+
+  public async getTaxOfCurrentQuarter(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    const { headers } = req;
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const quarter = Math.floor(currentMonth / 3);
+    const startDate = new Date(currentYear, quarter * 3, 1);
+    const endDate = new Date(currentYear, quarter * 3 + 3, 0);
+    const invoices = await InvoiceModel.find({
+      user: headers.userid,
+      date: {
+        $gte: startDate,
+        $lt: endDate,
+      },
+    });
+
+    // Accumulate the total of all invoices
+    // @ts-ignore
+    const total = invoices.reduce(
+      (acc, invoice) => acc + parseInt(invoice?.taxes || ""),
+      0,
+    );
+
+    res.status(200).json(total);
+  }
+
+  public async getTaxOfCurrentYear(req: Request, res: Response): Promise<void> {
+    const { headers } = req;
+    const currentYear = new Date().getFullYear();
+    const invoices = await InvoiceModel.find({
+      user: headers.userid,
+      date: {
+        $gte: new Date(currentYear, 0, 1),
+        $lt: new Date(currentYear + 1, 0, 0),
+      },
+    });
+
+    // Accumulate the total of all invoices
+    // @ts-ignore
+    const total = invoices.reduce(
+      (acc, invoice) => acc + parseInt(invoice?.taxes || ""),
+      0,
+    );
+
+    res.status(200).json(total);
+  }
 }

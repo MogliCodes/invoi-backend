@@ -20,6 +20,10 @@ router.get("/number", invoiceController.getNewInvoiceNumber);
 router.get("/revenue/quarter", invoiceController.getRevenueOfCurrentQuarter);
 router.get("/revenue/year", invoiceController.getRevenueOfCurrentYear);
 router.get("/revenue/month", invoiceController.getRevenueOfCurrentMonth);
+router.get("/tax/month", invoiceController.getTaxOfCurrentMonth);
+router.get("/tax/year", invoiceController.getTaxOfCurrentYear);
+router.get("/tax/quarter", invoiceController.getTaxOfCurrentQuarter);
+
 router.post("/template", invoiceController.uploadCustomTemplate);
 router.post(
   "/import",
