@@ -240,7 +240,10 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
     const yearDirectoryPath = `${__dirname}/../../../tmp/${year}`;
     const directoryForYearExists = fs.existsSync(yearDirectoryPath);
     const path = `${__dirname}/../../../tmp/${year}/${fileName}`;
-
+    consola.log("Full path", path);
+    // strip away string before /tmp but leave /tmp in the path
+    const pathWithoutTmp = path.slice(path.indexOf("/tmp"));
+    console.log("pathWithoutTmp", pathWithoutTmp);
     if (!directoryForYearExists) {
       fs.mkdirSync(yearDirectoryPath);
     }

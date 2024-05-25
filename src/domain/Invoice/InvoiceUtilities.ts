@@ -37,7 +37,7 @@ type ClientData = {
 export function transformInvoiceData(data: InvoiceData): InvoiceData {
   const transformedData = { ...data };
   transformedData.items = JSON.parse(data.items.toString());
-  transformedData.date = new Date(data.date).toLocaleDateString();
+  transformedData.date = new Date(data.date).toLocaleDateString("de-DE");
   transformedData.performancePeriodStart = new Date(
     data.performancePeriodStart,
   ).toLocaleDateString();

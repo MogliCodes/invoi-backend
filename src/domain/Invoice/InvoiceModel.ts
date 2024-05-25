@@ -46,6 +46,9 @@ const invoiceSchema = new mongoose.Schema({
   isReverseChargeInvoice: {
     type: Boolean,
   },
+  storagePath: {
+    type: String,
+  },
 });
 
 const InvoiceSchema = mongoose.model("Invoice", invoiceSchema);

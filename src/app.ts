@@ -11,7 +11,7 @@ import clientRouter from "./domain/Client/ClientRoutes.ts";
 import invoiceRouter from "./domain/Invoice/InvoiceRoutes.ts";
 import settingsRouter from "./domain/Settings/SettingsRoutes.ts";
 import { authenticate } from "./app/middleware/auth.ts";
-import { StorageController } from "./domain/Storage/StorageController.ts";
+import StorageController from "./domain/Storage/StorageController.ts";
 import { consola } from "consola";
 import { logger } from "./app/middleware/logging.ts";
 

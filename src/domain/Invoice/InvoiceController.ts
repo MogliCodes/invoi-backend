@@ -9,6 +9,8 @@ import ClientController from "../Client/ClientController.js";
 import ClientModel from "../Client/ClientModel.js";
 import { consola } from "consola";
 import SettingsModel from "../Settings/SettingsModel.ts";
+import StorageController from "../Storage/StorageController.js";
+import fs from "fs";
 
 const clientController = new ClientController();
 const STORAGE_URL = "https://dpoohyfcotuziotpwgbf.supabase.co/storage/v1";
@@ -148,8 +150,6 @@ export default class UserController {
   }
 
   public async createInvoice(req: Request, res: Response): Promise<void> {
-    // Take invoice data and create database entry
-    const invoice = await InvoiceModel.create(req.body);
     const invoiceData = req.body;
     const { headers } = req;
     const clientData = await ClientModel.findOne({
@@ -165,6 +165,9 @@ export default class UserController {
         clientData,
         settingsData,
       );
+      invoiceData.storagePath = absolutePathToPdf;
+      const invoice = await InvoiceModel.create(invoiceData);
+      console.log(invoice);
       consola.success(`Created invoice at path: ${absolutePathToPdf}`);
       res.status(201).json({
         status: 201,
@@ -172,6 +175,16 @@ export default class UserController {
         link: absolutePathToPdf,
         invoice,
       });
+      try {
+        const minioClient = await StorageController.createStorageClient();
+        const bucketName = "invoices";
+        const fileName = invoiceData.nr;
+        if (!minioClient) return;
+        const file = fs.readFileSync(absolutePathToPdf);
+        await minioClient.putObject(bucketName, `${fileName}.pdf`, file);
+      } catch (error) {
+        consola.error(error);
+      }
     } catch (error) {
       consola.error(error);
       res.status(500).json({ error: "Error creating invoice" });
