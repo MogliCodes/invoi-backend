@@ -41,11 +41,13 @@ export default class StorageController {
 
   public static async createStorageClient() {
     try {
-      const ACCESS_KEY = "ezi9yqfqBBdjCUdMOUf8";
-      const SECRET_KEY = "39kAuhmqNeHAD4rE6IaQMNzOBkUHdKmH09XVKHkU";
+      const ACCESS_KEY = process.env.MINIO_ACCESS_KEY || "";
+      const SECRET_KEY = process.env.MINIO_SECRET_KEY || "";
+      const ENDPOINT = process.env.MINIO_ENDPOINT || "";
+      const PORT = parseInt(process.env.MINIO_PORT || "9000");
       return new Minio.Client({
-        endPoint: "127.0.0.1",
-        port: 9000,
+        endPoint: ENDPOINT,
+        port: PORT,
         useSSL: false,
         accessKey: ACCESS_KEY,
         secretKey: SECRET_KEY,

@@ -165,6 +165,7 @@ export default class UserController {
         clientData,
         settingsData,
       );
+      const fileName = invoiceData.nr;
       invoiceData.storagePath = absolutePathToPdf;
       const invoice = await InvoiceModel.create(invoiceData);
       console.log(invoice);
@@ -172,13 +173,13 @@ export default class UserController {
       res.status(201).json({
         status: 201,
         message: "Successfully created invoice",
-        link: absolutePathToPdf,
+        link: `${fileName}.pdf`,
         invoice,
       });
       try {
         const minioClient = await StorageController.createStorageClient();
         const bucketName = "invoices";
-        const fileName = invoiceData.nr;
+
         if (!minioClient) return;
         const file = fs.readFileSync(absolutePathToPdf);
         await minioClient.putObject(bucketName, `${fileName}.pdf`, file);

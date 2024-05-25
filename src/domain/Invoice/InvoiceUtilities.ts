@@ -3,6 +3,7 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { template } from "handlebars";
 import { consola } from "consola";
+import StorageController from "../Storage/StorageController.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -55,9 +56,36 @@ export function transformInvoiceData(data: InvoiceData): InvoiceData {
   return transformedData;
 }
 
-export function getDefaultTemplate(): string {
+export async function getDefaultTemplate() {
   consola.info("template-single.html used");
-  return fs.readFileSync(`${__dirname}/template-single.html`, "utf8");
+
+  const objectName = "template-single.html";
+  consola.info(`${objectName} used`);
+
+  try {
+    const minioClient = await StorageController.createStorageClient();
+    if (!minioClient) return;
+    const dataStream = await minioClient.getObject("templates", objectName);
+    let templateData = "";
+
+    return new Promise((resolve, reject) => {
+      dataStream.on("data", (chunk) => {
+        consola.info("chunk", chunk);
+        templateData += chunk.toString();
+      });
+
+      dataStream.on("end", () => {
+        resolve(templateData);
+      });
+
+      dataStream.on("error", (err) => {
+        reject(`Error while reading the object: ${err}`);
+      });
+    });
+  } catch (err) {
+    consola.error("Error fetching the template from MinIO:", err);
+    throw err;
+  }
 }
 
 export function getSubsequentPagesTemplate(): string {
