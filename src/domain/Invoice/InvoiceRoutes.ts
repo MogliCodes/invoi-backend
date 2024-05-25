@@ -17,6 +17,9 @@ router.post("/", invoiceController.createInvoice);
 router.post("/pdf", invoiceController.createInvoicePdf);
 router.get("/templates", invoiceController.getAllCustomTemplates);
 router.get("/number", invoiceController.getNewInvoiceNumber);
+router.get("/revenue/quarter", invoiceController.getRevenueOfCurrentQuarter);
+router.get("/revenue/year", invoiceController.getRevenueOfCurrentYear);
+router.get("/revenue/month", invoiceController.getRevenueOfCurrentMonth);
 router.post("/template", invoiceController.uploadCustomTemplate);
 router.post(
   "/import",
