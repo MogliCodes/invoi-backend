@@ -168,6 +168,7 @@ export default class UserController {
     const settingsData = await SettingsModel.findOne({
       user: headers?.userid,
     });
+    console.log("settings data in controller", settingsData);
     try {
       const absolutePathToPdf = await InvoiceService.createPdf(
         invoiceData,
