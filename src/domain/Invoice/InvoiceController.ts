@@ -5,14 +5,12 @@ import { StorageClient } from "@supabase/storage-js";
 import Papa from "papaparse";
 import mongoose, { Document } from "mongoose";
 import Pdfjs from "pdfjs-dist";
-import ClientController from "../Client/ClientController.js";
 import ClientModel from "../Client/ClientModel.js";
 import { consola } from "consola";
 import SettingsModel from "../Settings/SettingsModel.ts";
 import StorageController from "../Storage/StorageController.js";
 import fs from "fs";
 
-const clientController = new ClientController();
 const STORAGE_URL = "https://dpoohyfcotuziotpwgbf.supabase.co/storage/v1";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || "";
 const csvSchema = new mongoose.Schema({
@@ -127,8 +125,19 @@ export default class UserController {
       .sort({ ["nr"]: 1 })
       .skip((page - 1) * pageSize)
       .limit(pageSize);
+    console.log("clients", clients);
     res.status(200).json(clients);
   }
+
+  public async getInvoiceById(
+    req: Request<RequestParams, ResponseData, RequestBody, QueryParams>,
+    res: Response,
+  ): Promise<void> {
+    const { id } = req.params;
+    const invoice = await InvoiceModel.findById(id).populate("client").exec();
+    res.status(200).json(invoice);
+  }
+
   public async getInvoicesCountByUserId(
     req: Request,
     res: Response,
@@ -309,43 +318,48 @@ export default class UserController {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async getNewInvoiceNumber(req: Request, res: Response): Promise<void> {
-    const currentYear = new Date().getFullYear();
-    console.log("currentYear", currentYear);
-    const searchQuery = `^${currentYear}`;
-    console.log("searchQuery", searchQuery);
+    try {
+      const currentYear = new Date().getFullYear();
+      console.log("currentYear", currentYear);
+      const searchQuery = `^${currentYear}`;
+      console.log("searchQuery", searchQuery);
 
-    const query = await InvoiceModel.find({ nr: new RegExp(searchQuery) });
-    const latestInvoice = await InvoiceModel.findOne({
-      nr: { $regex: /^2023-\d+$/ },
-    }) // Match the pattern "YYYY-NNN"
-      .sort({ nr: -1 }) // Sort in descending order based on the numeric value of the suffix
-      .limit(1); // Limit the result to one document
+      const query = await InvoiceModel.find({ nr: new RegExp(searchQuery) });
+      const latestInvoice = await InvoiceModel.findOne({
+        nr: { $regex: /^2023-\d+$/ },
+      }) // Match the pattern "YYYY-NNN"
+        .sort({ nr: -1 }) // Sort in descending order based on the numeric value of the suffix
+        .limit(1); // Limit the result to one document
 
-    if (!latestInvoice) {
-      res.send(400);
-      return;
-    }
-    // Given invoice number
-    const currentInvoiceNumber = latestInvoice.nr;
+      if (!latestInvoice) {
+        res.send(400);
+        return;
+      }
+      // Given invoice number
+      const currentInvoiceNumber = latestInvoice.nr;
 
-    // Extract the numeric part
-    const numericPart = parseInt(currentInvoiceNumber.split("-")[1]);
+      // Extract the numeric part
+      const numericPart = parseInt(currentInvoiceNumber.split("-")[1]);
 
-    // Increment the numeric part
-    const incrementedNumericPart = numericPart + 1;
+      // Increment the numeric part
+      const incrementedNumericPart = numericPart + 1;
 
-    // Format the new invoice number
-    const newInvoiceNumber = `2023-${String(incrementedNumericPart).padStart(
-      3,
-      "0",
-    )}`;
-    console.log("newInvoiceNumber", newInvoiceNumber);
+      // Format the new invoice number
+      const newInvoiceNumber = `2023-${String(incrementedNumericPart).padStart(
+        3,
+        "0",
+      )}`;
+      console.log("newInvoiceNumber", newInvoiceNumber);
 
-    if (!query.length) {
-      res.json({ number: `${currentYear}-001` });
-    } else {
-      res.json(newInvoiceNumber);
-      console.log("query", query);
+      if (!query.length) {
+        res.json({ number: `${currentYear}-001` });
+      } else {
+        res.json(newInvoiceNumber);
+        console.log("query", query);
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Error getting new invoice number" });
     }
   }
 
@@ -532,5 +546,25 @@ export default class UserController {
     );
 
     res.status(200).json(total);
+  }
+
+  public async markInvoiceAsPaid(req: Request, res: Response): Promise<void> {
+    console.log("markInvoiceAsPaid", req.params.id);
+    const query = { _id: req.params.id };
+    const options = { upsert: true };
+    const updatedInvoice = req.body;
+    console.log("updatedInvoice", updatedInvoice);
+
+    const result = InvoiceModel.updateOne(query, updatedInvoice, options)
+      .then((result) => {
+        const { matchedCount, modifiedCount } = result;
+        if (matchedCount && modifiedCount) {
+          console.log(`Successfully added a new review.`);
+        }
+      })
+      .catch((err) => console.error(`Failed to add review: ${err}`));
+    res
+      .status(200)
+      .json({ status: 200, message: "Successfully patched invoice" });
   }
 }

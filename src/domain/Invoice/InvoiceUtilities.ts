@@ -1,7 +1,6 @@
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-import { template } from "handlebars";
 import { consola } from "consola";
 import StorageController from "../Storage/StorageController.js";
 
@@ -57,11 +56,12 @@ export function transformInvoiceData(data: InvoiceData): InvoiceData {
 }
 
 export async function getDefaultTemplate() {
-  consola.info("template-single.html used");
-
   const objectName = "template-single.html";
   consola.info(`${objectName} used`);
+  return getTemplateFromStorage(objectName);
+}
 
+async function getTemplateFromStorage(objectName: string): Promise<unknown> {
   try {
     const minioClient = await StorageController.createStorageClient();
     if (!minioClient) return;
@@ -88,21 +88,22 @@ export async function getDefaultTemplate() {
   }
 }
 
-export function getSubsequentPagesTemplate(): string {
+export function getSubsequentPagesTemplate() {
   consola.info("template-subsequent.html used");
-  return fs.readFileSync(`${__dirname}/template-subsequent.html`, "utf8");
+  const objectName = "template-subsequent.html";
+  return getTemplateFromStorage(objectName);
 }
 
-export function getLastPageTemplate(): string {
+export function getLastPageTemplate() {
   consola.info("template-last-page.html used");
-  return fs.readFileSync(`${__dirname}/template-last-page.html`, "utf8");
+  const objectName = "template-last-page.html";
+  return getTemplateFromStorage(objectName);
 }
 
-export function getInvoiceSenderInfoTemplate(): string {
-  return fs.readFileSync(
-    `${__dirname}/partials/template-invoice-sender-info.html`,
-    "utf8",
-  );
+export function getInvoiceSenderInfoTemplate(): Promise<unknown> {
+  consola.info("template-invoice-sender-info.html used");
+  const objectName = "partials/template-invoice-sender-info.html";
+  return getTemplateFromStorage(objectName);
 }
 
 export function saveTemplateHtml(templateHtml: any): void {

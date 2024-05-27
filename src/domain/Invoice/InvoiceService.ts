@@ -144,9 +144,12 @@ export default class InvoiceService {
     const page = await browser.newPage();
     const isLastPage = currentPageIndex === numberOfPages;
     const isSinglePage = numberOfPages === 1;
-    const invoiceSenderInfoTemplate = getInvoiceSenderInfoTemplate();
+    const invoiceSenderInfoTemplate = await getInvoiceSenderInfoTemplate();
 
-    handlebars.registerPartial("invoiceSenderInfo", invoiceSenderInfoTemplate);
+    handlebars.registerPartial(
+      "invoiceSenderInfo",
+      <Handlebars.TemplateDelegate<any> | string>invoiceSenderInfoTemplate,
+    );
 
     const template =
       isLastPage && !isSinglePage

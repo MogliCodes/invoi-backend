@@ -23,7 +23,7 @@ router.get("/revenue/month", invoiceController.getRevenueOfCurrentMonth);
 router.get("/tax/month", invoiceController.getTaxOfCurrentMonth);
 router.get("/tax/year", invoiceController.getTaxOfCurrentYear);
 router.get("/tax/quarter", invoiceController.getTaxOfCurrentQuarter);
-
+router.get("/:id", invoiceController.getInvoiceById);
 router.post("/template", invoiceController.uploadCustomTemplate);
 router.post(
   "/import",
@@ -36,6 +36,9 @@ router.post(
   upload.single("pdfFile"),
   invoiceController.importPdfInvoiceData,
 );
+
+router.patch("/:id/mark-as-paid", invoiceController.markInvoiceAsPaid);
+
 router.delete("/:id", invoiceController.deleteInvoice);
 
 export default router;
