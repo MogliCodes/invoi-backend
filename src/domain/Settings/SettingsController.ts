@@ -9,8 +9,12 @@ export default class SettingsController {
   }
   public async createSettings(req: Request, res: Response): Promise<void> {
     const { headers } = req;
-    const settings = await SettingsModel.create(req.body);
-    res.status(201).json({ message: "createSettings", data: settings });
+    const settings = {
+      ...req.body,
+      user: headers.userid,
+    };
+    const createdSettings = await SettingsModel.create(settings);
+    res.status(201).json({ message: "createSettings", data: createdSettings });
   }
 
   public async updateSettings(req: Request, res: Response): Promise<void> {
