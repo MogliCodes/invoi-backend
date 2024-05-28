@@ -10,6 +10,7 @@ import { consola } from "consola";
 import SettingsModel from "../Settings/SettingsModel.ts";
 import StorageController from "../Storage/StorageController.js";
 import fs from "fs";
+import { generateFileName } from "./InvoiceUtilities.js";
 
 const STORAGE_URL = "https://dpoohyfcotuziotpwgbf.supabase.co/storage/v1";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || "";
@@ -182,32 +183,34 @@ export default class UserController {
       }
       console.log("settings data in controller", settingsData);
 
-      const absolutePathToPdf = await InvoiceService.createPdf(
+      const pdfBuffer: Buffer = await InvoiceService.createPdf(
         invoiceData,
         clientData,
         settingsData,
       );
-      const fileName = invoiceData.nr;
-      invoiceData.storagePath = absolutePathToPdf;
+
+      const fileName = generateFileName(clientData as ClientData, invoiceData);
+      const bucketName = "invoices";
+
+      // Upload directly to MinIO
+      try {
+        const minioClient = await StorageController.createStorageClient();
+        if (!minioClient) {
+          throw new Error("Failed to create MinIO client");
+        }
+        await minioClient.putObject(bucketName, fileName, pdfBuffer);
+        consola.success(`Uploaded invoice to MinIO: ${fileName}`);
+      } catch (error) {
+        consola.error("Error uploading to MinIO:", error);
+        res.status(500).json({ error: "Error uploading to MinIO" });
+      }
       const invoice = await InvoiceModel.create(invoiceData);
-      console.log(invoice);
-      consola.success(`Created invoice at path: ${absolutePathToPdf}`);
       res.status(201).json({
         status: 201,
         message: "Successfully created invoice",
         link: `${fileName}.pdf`,
         invoice,
       });
-      try {
-        const minioClient = await StorageController.createStorageClient();
-        const bucketName = "invoices";
-
-        if (!minioClient) return;
-        const file = fs.readFileSync(absolutePathToPdf);
-        await minioClient.putObject(bucketName, `${fileName}.pdf`, file);
-      } catch (error) {
-        consola.error(error);
-      }
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Error getting client and settings data" });

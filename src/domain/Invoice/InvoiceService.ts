@@ -51,7 +51,7 @@ export default class InvoiceService {
     invoiceData: InvoiceData,
     clientData: ClientData | any,
     settingsData: any,
-  ): Promise<string> {
+  ): Promise<Buffer> {
     const maxCharsPerPage = 900;
     let currentPageChars = 0;
     let currentPageIndex = 0;
@@ -126,9 +126,7 @@ export default class InvoiceService {
     // Close the browser
     await browser.close();
 
-    // Save the complete PDF
-    const timestamp = Date.now();
-    return await this.savePdf(allPagesHtml, timestamp, clientData, invoiceData);
+    return await this.generatePdfBuffer(allPagesHtml);
   }
 
   static async processItemsForPage(
@@ -259,5 +257,17 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
     await browser.close();
 
     return path;
+  }
+
+  static async generatePdfBuffer(allPagesHtml: string): Promise<Buffer> {
+    const browser = await chromium.launch();
+    const page = await browser.newPage();
+    await page.setContent(allPagesHtml);
+    const pdfBuffer: Buffer = await page.pdf({
+      format: "a4",
+    });
+    await browser.close();
+
+    return pdfBuffer;
   }
 }
