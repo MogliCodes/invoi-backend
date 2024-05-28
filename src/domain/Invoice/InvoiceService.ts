@@ -151,10 +151,12 @@ export default class InvoiceService {
 
     const template =
       isLastPage && !isSinglePage
-        ? handlebars.compile(getLastPageTemplate(), { noEscape: true })
+        ? handlebars.compile(await getLastPageTemplate(), { noEscape: true })
         : currentPageIndex === 1 && isSinglePage
         ? handlebars.compile(await getDefaultTemplate(), { noEscape: true })
-        : handlebars.compile(getSubsequentPagesTemplate(), { noEscape: true });
+        : handlebars.compile(await getSubsequentPagesTemplate(), {
+            noEscape: true,
+          });
 
     const formattedItems = itemsForOnePage.map((item) => {
       return {
