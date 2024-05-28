@@ -161,15 +161,27 @@ export default class UserController {
   public async createInvoice(req: Request, res: Response): Promise<void> {
     const invoiceData = req.body;
     const { headers } = req;
-    const clientData = await ClientModel.findOne({
-      user: headers?.userid,
-      _id: invoiceData.client,
-    });
-    const settingsData = await SettingsModel.findOne({
-      user: headers?.userid,
-    });
-    console.log("settings data in controller", settingsData);
+
     try {
+      const clientData = await ClientModel.findOne({
+        user: headers?.userid,
+        _id: invoiceData.client,
+      });
+      if (!clientData) {
+        res.status(404).json({ error: "Client not found" });
+        return;
+      }
+      console.log("client data in controller", clientData);
+
+      const settingsData = await SettingsModel.findOne({
+        user: headers?.userid,
+      });
+      if (!settingsData) {
+        res.status(404).json({ error: "Settings not found" });
+        return;
+      }
+      console.log("settings data in controller", settingsData);
+
       const absolutePathToPdf = await InvoiceService.createPdf(
         invoiceData,
         clientData,
@@ -197,8 +209,8 @@ export default class UserController {
         consola.error(error);
       }
     } catch (error) {
-      consola.error(error);
-      res.status(500).json({ error: "Error creating invoice" });
+      console.error(error);
+      res.status(500).json({ error: "Error getting client and settings data" });
     }
   }
 
