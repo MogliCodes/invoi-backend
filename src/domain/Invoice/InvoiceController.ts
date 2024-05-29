@@ -1,120 +1,25 @@
 import { Request, Response } from "express";
-import InvoiceModel from "./InvoiceModel.ts";
-import InvoiceService from "./InvoiceService.js";
-import { StorageClient } from "@supabase/storage-js";
-import Papa from "papaparse";
-import mongoose, { Document } from "mongoose";
 import Pdfjs from "pdfjs-dist";
-import ClientModel from "../Client/ClientModel.js";
+import Papa from "papaparse";
+import InvoiceModel from "./InvoiceModel.ts";
+import InvoiceService from "./InvoiceService.ts";
+import ClientModel from "../Client/ClientModel.ts";
 import { consola } from "consola";
 import SettingsModel from "../Settings/SettingsModel.ts";
-import StorageController from "../Storage/StorageController.js";
-import fs from "fs";
-import { generateFileName } from "./InvoiceUtilities.js";
+import StorageController from "../Storage/StorageController.ts";
+import { formatTextToCSV, generateFileName } from "./InvoiceUtilities.ts";
 
-const STORAGE_URL = "https://dpoohyfcotuziotpwgbf.supabase.co/storage/v1";
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || "";
-const csvSchema = new mongoose.Schema({
-  Dateiname: String,
-  Kunde: String,
-  Projekt: String,
-  Rechnungsnummer: String,
-  Rechnungsdatum: String,
-  "Mwst.": String,
-  "Netto-Rechnungssume": String,
-  "Brutto-Rechnungssume": String,
-});
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const CsvModel = mongoose.model("CsvModel", csvSchema);
-
-interface ParsedInvoice extends Document {
-  Dateiname: string;
-  Kunde: string;
-  Projekt: string;
-  Rechnungsnummer: string;
-  Rechnungsdatum: string;
-  "Mwst.": string;
-  "Netto-Rechnungssume": string;
-  "Brutto-Rechnungssume": string;
-  user: string;
-}
-
-type InvoiceModel = {
-  nr: string;
-  client: string;
-  title: string;
-  date: Date;
-};
-type InvoicePosition = {
-  position: number;
-  description: string;
-  hours: number;
-  factor: number;
-  total: number;
-};
-type InvoiceData = {
-  nr: string;
-  client: string;
-  title: string;
-  date: string;
-  performancePeriodStart: string;
-  performancePeriodEnd: string;
-  items: Array<InvoicePosition>;
-  total: number;
-  taxes: number;
-  totalWithTaxes: number;
-};
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type CsvData = {
-  data: Array<ParsedInvoice>;
-};
-
-interface RequestParams {
-  id: string;
-}
-
-interface QueryParams {
-  page: number;
-  pageSize: number;
-}
-
-interface RequestBody {
-  key: string;
-  value: string;
-}
-
-interface ResponseData {
-  message: string;
-}
-
-type ClientData = {
-  company: string;
-  street: string;
-  zip: string;
-  city: string;
-};
-
-// Function to convert extracted text to CSV
-function formatTextToCSV(text: string) {
-  const rows = text.split("\n");
-
-  const headers = rows[0].trim().split(/\s+/);
-  const rowsAndColumns = rows.slice(1).map((row) => {
-    const columns = row.trim().split(/\s{2,}/); // Split on 2 or more consecutive spaces
-    const position = columns[0];
-    const leistung = columns[1];
-    const stundensatz = columns[2];
-    const faktor = columns[3];
-    const gesamtpreis = columns[4];
-    return [position, leistung, stundensatz, faktor, gesamtpreis];
-  });
-
-  const csvRows = rowsAndColumns.map((columns) => columns.join(","));
-  const csvString = [headers.join(","), ...csvRows].join("\n");
-  return csvString;
-}
-
+import type {
+  ClientData,
+  CustomHeaders,
+  InvoiceCsvData,
+  ParsedInvoice,
+  QueryParams,
+  RequestBody,
+  RequestParams,
+  ResponseData,
+} from "../../types.d.ts";
+import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
 export default class UserController {
   public async getAllInvoices(
     req: Request<RequestParams, ResponseData, RequestBody, QueryParams>,
@@ -139,10 +44,7 @@ export default class UserController {
     res.status(200).json(invoice);
   }
 
-  public async getInvoicesCountByUserId(
-    req: Request,
-    res: Response,
-  ): Promise<void> {
+  public async getInvoicesCount(req: Request, res: Response): Promise<void> {
     try {
       const { headers } = req;
       const invoiceCount = await InvoiceModel.countDocuments({
@@ -155,13 +57,9 @@ export default class UserController {
     }
   }
 
-  public async getInvoiceByid(req: Request, res: Response): Promise<void> {
-    res.status(201).json({ message: "getInvoiceById" });
-  }
-
   public async createInvoice(req: Request, res: Response): Promise<void> {
     const invoiceData = req.body;
-    const { headers } = req;
+    const headers = req.headers as CustomHeaders;
 
     try {
       const clientData = await ClientModel.findOne({
@@ -196,8 +94,10 @@ export default class UserController {
       try {
         const minioClient = await StorageController.createStorageClient();
         if (!minioClient) {
-          throw new Error("Failed to create MinIO client");
+          const error = new Error("Failed to create MinIO client");
+          console.error(error);
         }
+        if (!minioClient) return;
         await minioClient.putObject(bucketName, fileName, pdfBuffer);
         consola.success(`Uploaded invoice to MinIO: ${fileName}`);
       } catch (error) {
@@ -215,30 +115,6 @@ export default class UserController {
       console.error(error);
       res.status(500).json({ error: "Error getting client and settings data" });
     }
-  }
-
-  public async uploadInvoicePdfTemplate(
-    req: Request,
-    res: Response,
-  ): Promise<void> {
-    // Validate the pdf template
-    res.status(201).json({ message: "getInvoiceById" });
-  }
-
-  public async getAllCustomTemplates(
-    req: Request,
-    res: Response,
-  ): Promise<void> {
-    const storageClient = new StorageClient(STORAGE_URL, {
-      apikey: SERVICE_KEY,
-      Authorization: `Bearer ${SERVICE_KEY}`,
-    });
-    console.log(storageClient);
-
-    const { data } = await storageClient
-      .from("Invoices")
-      .getPublicUrl("/Download.png");
-    res.status(201).json({ message: data });
   }
 
   public async uploadCustomTemplate(
@@ -261,8 +137,8 @@ export default class UserController {
         skipEmptyLines: true,
       });
 
-      const transformedData: Array<InvoiceModel> = parsedData.data.map(
-        (invoice) => {
+      const transformedData: Array<InvoiceCsvData> = parsedData.data.map(
+        (invoice: ParsedInvoice) => {
           return {
             nr: invoice.Rechnungsnummer,
             client: invoice.Kunde,
@@ -297,24 +173,23 @@ export default class UserController {
     req: Request,
     res: Response,
   ): Promise<void> {
-    console.log("hello pdf import");
     if (req.file) {
       console.log(req.file.buffer.toString());
-      const data = req.file.buffer;
-      const dataArray = new Uint8Array(data);
-      const doc = await Pdfjs.getDocument(dataArray).promise;
-      console.log("dataArray", dataArray);
-      console.log("doc", doc);
+      const data: Buffer = req.file.buffer;
+      const dataArray: Uint8Array = new Uint8Array(data);
+      const doc: PDFDocumentProxy = await Pdfjs.getDocument(dataArray).promise;
+      const numPages: number = doc.numPages;
+      let pdfContent: string = "";
 
-      const numPages = doc.numPages;
-
-      let pdfContent = "";
-
-      for (let pageIndex = 0; pageIndex < numPages; pageIndex++) {
-        const page = await doc.getPage(pageIndex + 1);
+      for (let pageIndex: number = 0; pageIndex < numPages; pageIndex++) {
+        const page: PDFPageProxy = await doc.getPage(pageIndex + 1);
         const textContent = await page.getTextContent();
         const pageText = textContent.items
-          .map((item: any) => item.str)
+          .map((item) => {
+            if ("str" in item) {
+              return item.str;
+            }
+          })
           .join(" ");
         pdfContent += pageText;
       }
@@ -323,8 +198,6 @@ export default class UserController {
       if (startIndex !== -1) {
         invoiceData = pdfContent.substring(startIndex);
       }
-      console.log("invoiceData", invoiceData);
-
       const formattedCSV = formatTextToCSV(invoiceData);
       console.log("formattedCSV", formattedCSV);
 
@@ -332,14 +205,10 @@ export default class UserController {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async getNewInvoiceNumber(req: Request, res: Response): Promise<void> {
+  public async getNewInvoiceNumber(res: Response): Promise<void> {
     try {
       const currentYear = new Date().getFullYear();
-      console.log("currentYear", currentYear);
       const searchQuery = `^${currentYear}`;
-      console.log("searchQuery", searchQuery);
-
       const query = await InvoiceModel.find({ nr: new RegExp(searchQuery) });
       const latestInvoice = await InvoiceModel.findOne({
         nr: { $regex: /^2023-\d+$/ },
@@ -365,7 +234,6 @@ export default class UserController {
         3,
         "0",
       )}`;
-      console.log("newInvoiceNumber", newInvoiceNumber);
 
       if (!query.length) {
         res.json({ number: `${currentYear}-001` });
@@ -429,7 +297,6 @@ export default class UserController {
     });
 
     // Accumulate the total of all invoices
-    // @ts-ignore
     const total = invoices.reduce(
       (acc, invoice) => acc + parseInt(invoice?.total || ""),
       0,
@@ -457,7 +324,6 @@ export default class UserController {
     });
 
     // Accumulate the total of all invoices
-    // @ts-ignore
     const total = invoices.reduce(
       (acc, invoice) => acc + parseInt(invoice?.total || ""),
       0,
@@ -481,7 +347,6 @@ export default class UserController {
     });
 
     // Accumulate the total of all invoices
-    // @ts-ignore
     const total = invoices.reduce(
       (acc, invoice) => acc + parseInt(invoice?.total || ""),
       0,
@@ -506,7 +371,6 @@ export default class UserController {
     });
 
     // Accumulate the total of all invoices
-    // @ts-ignore
     const total = invoices.reduce(
       (acc, invoice) => acc + parseInt(invoice?.taxes || ""),
       0,
@@ -534,7 +398,6 @@ export default class UserController {
     });
 
     // Accumulate the total of all invoices
-    // @ts-ignore
     const total = invoices.reduce(
       (acc, invoice) => acc + parseInt(invoice?.taxes || ""),
       0,
@@ -555,7 +418,6 @@ export default class UserController {
     });
 
     // Accumulate the total of all invoices
-    // @ts-ignore
     const total = invoices.reduce(
       (acc, invoice) => acc + parseInt(invoice?.taxes || ""),
       0,
@@ -571,7 +433,7 @@ export default class UserController {
     const updatedInvoice = req.body;
     console.log("updatedInvoice", updatedInvoice);
 
-    const result = InvoiceModel.updateOne(query, updatedInvoice, options)
+    InvoiceModel.updateOne(query, updatedInvoice, options)
       .then((result) => {
         const { matchedCount, modifiedCount } = result;
         if (matchedCount && modifiedCount) {

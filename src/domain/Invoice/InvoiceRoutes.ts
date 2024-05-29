@@ -8,14 +8,10 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 router.get("/", invoiceController.getAllInvoices);
-router.get("/count", invoiceController.getInvoicesCountByUserId);
-
-// TODO: How to PROPERLY nest API api?
-// router.get("/:id", invoiceController.getInvoiceByid);
+router.get("/count", invoiceController.getInvoicesCount);
 router.post("/bulk/delete", invoiceController.bulkDeleteInvoices);
 router.post("/", invoiceController.createInvoice);
 router.post("/pdf", invoiceController.createInvoicePdf);
-router.get("/templates", invoiceController.getAllCustomTemplates);
 router.get("/number", invoiceController.getNewInvoiceNumber);
 router.get("/revenue/quarter", invoiceController.getRevenueOfCurrentQuarter);
 router.get("/revenue/year", invoiceController.getRevenueOfCurrentYear);
@@ -30,15 +26,12 @@ router.post(
   upload.single("csvFile"),
   invoiceController.importInvoiceData,
 );
-
 router.post(
   "/import/pdf",
   upload.single("pdfFile"),
   invoiceController.importPdfInvoiceData,
 );
-
 router.patch("/:id/mark-as-paid", invoiceController.markInvoiceAsPaid);
-
 router.delete("/:id", invoiceController.deleteInvoice);
 
 export default router;
