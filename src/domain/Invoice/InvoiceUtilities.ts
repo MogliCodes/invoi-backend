@@ -168,3 +168,20 @@ export function generateFileName(
     "-",
   )}_${invoiceData.title.replace(/ /g, "-")}.pdf`;
 }
+
+export function formatTextToCSV(text: string): string {
+  const rows = text.split("\n");
+  const headers = rows[0].trim().split(/\s+/);
+  const rowsAndColumns = rows.slice(1).map((row) => {
+    const columns = row.trim().split(/\s{2,}/); // Split on 2 or more consecutive spaces
+    const position = columns[0];
+    const leistung = columns[1];
+    const stundensatz = columns[2];
+    const faktor = columns[3];
+    const gesamtpreis = columns[4];
+    return [position, leistung, stundensatz, faktor, gesamtpreis];
+  });
+
+  const csvRows = rowsAndColumns.map((columns) => columns.join(","));
+  return [headers.join(","), ...csvRows].join("\n");
+}

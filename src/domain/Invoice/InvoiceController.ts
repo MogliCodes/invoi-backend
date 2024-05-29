@@ -21,6 +21,14 @@ import type {
 } from "../../types.d.ts";
 import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
 export default class UserController {
+  public sendHttpResponse<T>(res: Response, data: Array<T> | string) {
+    if (data && data.length > 0) {
+      res.status(200).json({ data: data, status: 200, total: data.length });
+    } else {
+      res.status(404).json({ status: 404, message: "No data found" });
+    }
+  }
+
   public async getAllInvoices(
     req: Request<RequestParams, ResponseData, RequestBody, QueryParams>,
     res: Response,
@@ -31,7 +39,6 @@ export default class UserController {
       .sort({ ["nr"]: 1 })
       .skip((page - 1) * pageSize)
       .limit(pageSize);
-    console.log("clients", clients);
     res.status(200).json(clients);
   }
 
@@ -70,8 +77,6 @@ export default class UserController {
         res.status(404).json({ error: "Client not found" });
         return;
       }
-      console.log("client data in controller", clientData);
-
       const settingsData = await SettingsModel.findOne({
         user: headers?.userid,
       });
@@ -79,7 +84,6 @@ export default class UserController {
         res.status(404).json({ error: "Settings not found" });
         return;
       }
-      console.log("settings data in controller", settingsData);
 
       const pdfBuffer: Buffer = await InvoiceService.createPdf(
         invoiceData,
@@ -199,9 +203,9 @@ export default class UserController {
         invoiceData = pdfContent.substring(startIndex);
       }
       const formattedCSV = formatTextToCSV(invoiceData);
-      console.log("formattedCSV", formattedCSV);
 
-      res.send("HELLO");
+      // Send response
+      this.sendHttpResponse(res, formattedCSV);
     }
   }
 
