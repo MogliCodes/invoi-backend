@@ -42,6 +42,34 @@ export default class UserController {
     res.status(200).json(clients);
   }
 
+  /**
+   * @swagger
+   * /invoice/{id}:
+   *   get:
+   *     tags:
+   *      - Invoices
+   *     summary: Get an invoice by ID
+   *     description: Returns a single invoice
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *     responses:
+   *       200:
+   *         description: A single invoice
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 id:
+   *                   type: string
+   *                 title:
+   *                   type: string
+   *                   description: The title of the invoice
+   */
   public async getInvoiceById(
     req: Request<RequestParams, ResponseData, RequestBody, QueryParams>,
     res: Response,
@@ -51,6 +79,22 @@ export default class UserController {
     res.status(200).json(invoice);
   }
 
+  /**
+   * @swagger
+   * /invoice/count:
+   *   get:
+   *     tags:
+   *      - Invoices
+   *     summary: Get the count of all invoices
+   *     description: Returns the count of all invoices
+   *     responses:
+   *       200:
+   *         description: The count of all invoices
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: integer
+   */
   public async getInvoicesCount(req: Request, res: Response): Promise<void> {
     try {
       const { headers } = req;
@@ -64,6 +108,40 @@ export default class UserController {
     }
   }
 
+  /**
+   * @swagger
+   * /invoice:
+   *   post:
+   *     tags:
+   *      - Invoices
+   *     summary: Create a new invoice
+   *     description: Creates a new invoice with the provided data
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               client:
+   *                 type: string
+   *                 description: The ID of the client
+   *               title:
+   *                 type: string
+   *                 description: The title of the invoice
+   *     responses:
+   *       201:
+   *         description: The created invoice
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 id:
+   *                   type: string
+   *                 title:
+   *                   type: string
+   */
   public async createInvoice(req: Request, res: Response): Promise<void> {
     const invoiceData = req.body;
     const headers = req.headers as CustomHeaders;
@@ -121,6 +199,36 @@ export default class UserController {
     }
   }
 
+  /**
+   * @swagger
+   * /invoice/template:
+   *   post:
+   *     tags:
+   *      - Invoices
+   *     summary: Upload a custom invoice template
+   *     description: Uploads a custom invoice template
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         multipart/form-data:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               template:
+   *                 type: string
+   *                 format: binary
+   *                 description: The custom invoice template file
+   *     responses:
+   *       200:
+   *         description: The uploaded template
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   */
   public async uploadCustomTemplate(
     req: Request,
     res: Response,
@@ -209,13 +317,13 @@ export default class UserController {
     }
   }
 
-  public async getNewInvoiceNumber(res: Response): Promise<void> {
+  public async getNewInvoiceNumber(req: Request, res: Response): Promise<void> {
     try {
       const currentYear = new Date().getFullYear();
       const searchQuery = `^${currentYear}`;
       const query = await InvoiceModel.find({ nr: new RegExp(searchQuery) });
       const latestInvoice = await InvoiceModel.findOne({
-        nr: { $regex: /^2023-\d+$/ },
+        nr: { $regex: /^2024-\d+$/ },
       }) // Match the pattern "YYYY-NNN"
         .sort({ nr: -1 }) // Sort in descending order based on the numeric value of the suffix
         .limit(1); // Limit the result to one document
@@ -234,7 +342,7 @@ export default class UserController {
       const incrementedNumericPart = numericPart + 1;
 
       // Format the new invoice number
-      const newInvoiceNumber = `2023-${String(incrementedNumericPart).padStart(
+      const newInvoiceNumber = `2024-${String(incrementedNumericPart).padStart(
         3,
         "0",
       )}`;

@@ -19,6 +19,8 @@ const storageController = new StorageController();
 const dbUrl: string = process.env.DATABASE_URL || "";
 const app: Application = express();
 const port: number = 8000;
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./swaggerConfig.ts";
 
 config({ path: "../.env" });
 storageController.getStorageInfo();
@@ -31,6 +33,8 @@ mongoose
   .catch((error) => {
     consola.error(new Error(error));
   });
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use((req, res, next) => {
   res.locals.baseUrl = req.protocol + "://" + req.get("host");
   next();
