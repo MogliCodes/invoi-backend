@@ -1,8 +1,10 @@
-// import { StorageClient } from "@supabase/storage-js";
+import { Request, Response } from "express";
 import { config } from "dotenv";
 import { consola } from "consola";
 import * as Minio from "minio";
 import fs from "fs";
+import { Error } from "mongoose";
+import { BucketItem } from "minio";
 
 config();
 
@@ -34,7 +36,7 @@ export default class StorageController {
         consola.error(error);
       }
       return minioClient;
-    } catch (error: any) {
+    } catch (error) {
       consola.error(error);
     }
   }
@@ -52,8 +54,54 @@ export default class StorageController {
         accessKey: ACCESS_KEY,
         secretKey: SECRET_KEY,
       });
-    } catch (error: any) {
+    } catch (error) {
       consola.error(error);
+    }
+  }
+
+  public async listAllBuckets(req: Request, res: Response) {
+    try {
+      const minioClient = await StorageController.createStorageClient();
+      if (!minioClient) return new Error("Minio client not found");
+      const buckets = await minioClient.listBuckets();
+      res.status(200).json({ message: "listAllBuckets", data: buckets });
+    } catch (error) {
+      consola.error(error);
+    }
+  }
+
+  public async listObjects(req: Request, res: Response) {
+    try {
+      const minioClient = await StorageController.createStorageClient();
+      if (!minioClient)
+        return res.status(500).json({ error: "Minio client not found" });
+
+      const listObjects = () => {
+        return new Promise<Array<BucketItem>>((resolve, reject) => {
+          let data: Array<BucketItem> = [];
+          const stream = minioClient.listObjects("templates", "", true);
+
+          stream.on("data", (obj) => {
+            console.log("stream.on data", obj);
+            data.push(obj);
+          });
+
+          stream.on("end", () => {
+            console.log("stream.on end", data);
+            resolve(data);
+          });
+
+          stream.on("error", (err) => {
+            reject(err);
+          });
+        });
+      };
+
+      const data = await listObjects();
+      res.status(200).json({ message: "listObjects", data: data });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: error });
     }
   }
 }
