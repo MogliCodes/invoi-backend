@@ -622,4 +622,14 @@ export default class UserController {
       res.status(500).json({ error: "Error getting templates" });
     }
   }
+
+  public async deleteCustomTemplate(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    const { id } = req.params;
+    console.log("DELETE ID", id);
+    await TemplatesModel.findByIdAndDelete(id);
+    res.json({ message: "Deleted template" });
+  }
 }

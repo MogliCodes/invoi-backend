@@ -29,6 +29,7 @@ router.post(
   invoiceController.uploadCustomTemplates,
 );
 router.post("/template", invoiceController.uploadCustomTemplate);
+router.delete("/templates/:id", invoiceController.deleteCustomTemplate);
 router.post(
   "/import",
   upload.single("csvFile"),
