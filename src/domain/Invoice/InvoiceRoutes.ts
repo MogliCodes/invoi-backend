@@ -20,6 +20,7 @@ router.get("/tax/month", invoiceController.getTaxOfCurrentMonth);
 router.get("/tax/year", invoiceController.getTaxOfCurrentYear);
 router.get("/tax/quarter", invoiceController.getTaxOfCurrentQuarter);
 router.get("/templates", invoiceController.getCustomTemplates);
+router.get("/categories", (req, res) => res.status(200).json([]));
 router.get("/:id", invoiceController.getInvoiceById);
 router.post(
   "/templates/upload",

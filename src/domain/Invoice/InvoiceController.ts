@@ -564,6 +564,11 @@ export default class UserController {
     res: Response,
   ): Promise<void> {
     if (req.file && req.file?.buffer) {
+      const { headers } = req;
+      const { templatename, templatetags } = headers;
+      console.log("headers", headers);
+      console.log("uploadCustomTemplates", templatename, templatetags);
+
       const htmlFile = req.file?.buffer?.toString();
       const htmlBuffer = Buffer.from(htmlFile, "utf-8");
 
@@ -594,9 +599,11 @@ export default class UserController {
       try {
         await TemplatesModel.create({
           title: fileName,
+          name: templatename,
           user: req.headers.userid,
           fileName,
           etag: uploadedObjectInfo?.etag,
+          tags: templatetags,
         });
       } catch (error) {
         console.error(error);
