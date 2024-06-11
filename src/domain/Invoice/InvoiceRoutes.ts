@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { NextFunction, Request, Response, Router } from "express";
 import InvoiceController from "./InvoiceController.ts";
 import multer from "multer";
 
@@ -19,7 +19,14 @@ router.get("/revenue/month", invoiceController.getRevenueOfCurrentMonth);
 router.get("/tax/month", invoiceController.getTaxOfCurrentMonth);
 router.get("/tax/year", invoiceController.getTaxOfCurrentYear);
 router.get("/tax/quarter", invoiceController.getTaxOfCurrentQuarter);
+router.get("/templates", invoiceController.getCustomTemplates);
 router.get("/:id", invoiceController.getInvoiceById);
+router.post(
+  "/templates/upload",
+  logRequest,
+  upload.single("templateFirstPage"),
+  invoiceController.uploadCustomTemplates,
+);
 router.post("/template", invoiceController.uploadCustomTemplate);
 router.post(
   "/import",
@@ -33,5 +40,11 @@ router.post(
 );
 router.patch("/:id/mark-as-paid", invoiceController.markInvoiceAsPaid);
 router.delete("/:id", invoiceController.deleteInvoice);
+
+function logRequest(req: Request, res: Response, next: NextFunction) {
+  console.log("Headers:", req.headers);
+  console.log("Body:", req.body);
+  next();
+}
 
 export default router;

@@ -20,6 +20,7 @@ import type {
   ResponseData,
 } from "../../types.d.ts";
 import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
+import TemplatesModel from "./TemplatesModel.ts";
 export default class UserController {
   public sendHttpResponse<T>(res: Response, data: Array<T> | string) {
     if (data && data.length > 0) {
@@ -556,5 +557,62 @@ export default class UserController {
     res
       .status(200)
       .json({ status: 200, message: "Successfully patched invoice" });
+  }
+
+  public async uploadCustomTemplates(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    if (req.file && req.file?.buffer) {
+      const htmlFile = req.file?.buffer?.toString();
+      const htmlBuffer = Buffer.from(htmlFile, "utf-8");
+
+      const bucketName = "templates";
+      const fileName = req.file.originalname;
+      let uploadedObjectInfo;
+      try {
+        const minioClient = await StorageController.createStorageClient();
+        if (!minioClient) {
+          const error = new Error("Failed to create MinIO client");
+          console.error(error);
+        }
+        if (!minioClient) return;
+        uploadedObjectInfo = await minioClient.putObject(
+          bucketName,
+          fileName,
+          htmlBuffer,
+        );
+        consola.success(`Uploaded invoice to MinIO: ${fileName}`);
+        res
+          .status(200)
+          .json({ status: 200, message: "Successfully uploaded template" });
+      } catch (error) {
+        consola.error("Error uploading to MinIO:", error);
+        res.status(500).json({ error: "Error uploading to MinIO" });
+      }
+
+      try {
+        await TemplatesModel.create({
+          title: fileName,
+          user: req.headers.userid,
+          fileName,
+          etag: uploadedObjectInfo?.etag,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error saving template to MongoDB" });
+      }
+    }
+  }
+
+  public async getCustomTemplates(req: Request, res: Response): Promise<void> {
+    try {
+      console.log("getCustomTemplates error", req.headers.userid);
+      const templates = await TemplatesModel.find({ user: req.headers.userid });
+      res.status(200).json(templates);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Error getting templates" });
+    }
   }
 }

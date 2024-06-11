@@ -33,10 +33,12 @@ export default class StorageController {
         const file = fs.readFileSync(`${__dirname}/test.txt`);
         await minioClient.putObject("invoices", "test.txt", file);
       } catch (error) {
+        consola.error('Error uploading test file to "invoices" bucket');
         consola.error(error);
       }
       return minioClient;
     } catch (error) {
+      consola.error("Error establishing connection to Minio");
       consola.error(error);
     }
   }
@@ -82,12 +84,10 @@ export default class StorageController {
           const stream = minioClient.listObjects("templates", "", true);
 
           stream.on("data", (obj) => {
-            console.log("stream.on data", obj);
             data.push(obj);
           });
 
           stream.on("end", () => {
-            console.log("stream.on end", data);
             resolve(data);
           });
 
