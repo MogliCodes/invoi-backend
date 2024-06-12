@@ -8,7 +8,19 @@ import type {
   ResponseData,
 } from "../../types.js";
 export default class ServicesController {
-  private static sendHttpResponse<T>(res: Response, data: Array<T> | string) {
+  private static sendHttpResponse<T>(
+    res: Response,
+    data: Array<T> | string,
+    created = false,
+  ): void {
+    if (created) {
+      res.status(201).json({
+        data: data,
+        status: 201,
+        message: "Successfully create a new service",
+      });
+      return;
+    }
     if (data && data.length > 0) {
       res.status(200).json({ data: data, status: 200, total: data.length });
     } else {
@@ -53,6 +65,6 @@ export default class ServicesController {
     const service = await ServicesService.createService(
       body as unknown as ServiceDocument,
     );
-    ServicesController.sendHttpResponse(res, service);
+    ServicesController.sendHttpResponse(res, service, true);
   }
 }

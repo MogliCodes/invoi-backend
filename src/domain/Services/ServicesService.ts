@@ -15,6 +15,7 @@ export default class ServicesService {
     return ServicesModel.find({ user: userId });
   }
   public static async createService(body: ServiceDocument): Promise<any> {
+    console.log("body", body);
     return await ServicesModel.create({
       name: body.name,
       description: body.description,
