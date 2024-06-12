@@ -29,9 +29,10 @@ export default class ServicesController {
     req: Request<RequestParams, ResponseData, RequestBody, QueryParams>,
     res: Response,
   ): Promise<void> {
-    consola.info("getAllServices");
+    consola.info(req.headers);
+    const { userid } = req.headers;
     const services: Array<ServiceDocument> =
-      await ServicesService.getAllServices();
+      await ServicesService.getAllServices(userid as string);
     ServicesController.sendHttpResponse(res, services);
   }
 
