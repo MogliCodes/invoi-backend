@@ -75,6 +75,7 @@ export default class UserController {
     req: Request<RequestParams, ResponseData, RequestBody, QueryParams>,
     res: Response,
   ): Promise<void> {
+    console.log("GET INVOICE BY ID");
     const { id } = req.params;
     const invoice = await InvoiceModel.findById(id).populate("client").exec();
     res.status(200).json(invoice);
@@ -378,9 +379,9 @@ export default class UserController {
 
   public async deleteInvoice(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
-    console.log("DELETE ID", id);
+    consola.info("Deleted invoice with ID: ", id);
     await InvoiceModel.findByIdAndDelete(id);
-    res.json({ message: "Deleted invoice" });
+    res.json({ message: "Deleted invoice", status: 200 });
   }
 
   public async bulkDeleteInvoices(req: Request, res: Response): Promise<void> {
@@ -391,7 +392,7 @@ export default class UserController {
         ", ",
       )}`,
     );
-    res.json({ message: "Deleted invoices" });
+    res.json({ message: "Deleted invoices", status: 200 });
   }
 
   public async getRevenueOfCurrentMonth(
@@ -614,13 +615,20 @@ export default class UserController {
 
   public async getCustomTemplates(req: Request, res: Response): Promise<void> {
     try {
-      console.log("getCustomTemplates error", req.headers.userid);
       const templates = await TemplatesModel.find({ user: req.headers.userid });
-      res.status(200).json(templates);
+      setTimeout(() => {
+        res.status(200).json(templates);
+      }, 4000);
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Error getting templates" });
     }
+  }
+
+  public async getTemplateById(req: Request, res: Response): Promise<void> {
+    const { id } = req.params;
+    const template = await TemplatesModel.findById(id);
+    res.status(200).json(template);
   }
 
   public async deleteCustomTemplate(
@@ -630,6 +638,6 @@ export default class UserController {
     const { id } = req.params;
     console.log("DELETE ID", id);
     await TemplatesModel.findByIdAndDelete(id);
-    res.json({ message: "Deleted template" });
+    res.json({ message: "Deleted template", status: 200 });
   }
 }

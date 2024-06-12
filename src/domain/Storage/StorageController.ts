@@ -104,4 +104,27 @@ export default class StorageController {
       res.status(500).json({ error: error });
     }
   }
+
+  public async getObjectById(req: Request, res: Response) {
+    try {
+      const minioClient = await StorageController.createStorageClient();
+      if (!minioClient)
+        return res.status(500).json({ error: "Minio client not found" });
+
+      const listObject = () => {
+        return new Promise<Array<BucketItem>>((resolve, reject) => {
+          console.log(req.params.id);
+          let data: Array<BucketItem> = [];
+          const stream = minioClient.getObject("templates", req.params.id);
+          return stream;
+        });
+      };
+
+      const data = await listObject();
+      res.status(200).json({ message: "listObjects", data: data });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: error });
+    }
+  }
 }
