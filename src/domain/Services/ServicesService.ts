@@ -23,4 +23,8 @@ export default class ServicesService {
       user: body.user,
     });
   }
+
+  public static async bulkDeleteServices(ids: Array<string>): Promise<any> {
+    return ServicesModel.deleteMany({ _id: { $in: ids } });
+  }
 }

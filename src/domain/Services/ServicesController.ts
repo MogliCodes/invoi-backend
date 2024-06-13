@@ -41,7 +41,6 @@ export default class ServicesController {
     req: Request<RequestParams, ResponseData, RequestBody, QueryParams>,
     res: Response,
   ): Promise<void> {
-    consola.info(req.headers);
     const { userid } = req.headers;
     const services: Array<ServiceDocument> =
       await ServicesService.getAllServices(userid as string);
@@ -66,5 +65,16 @@ export default class ServicesController {
       body as unknown as ServiceDocument,
     );
     ServicesController.sendHttpResponse(res, service, true);
+  }
+
+  public async bulkDeleteServices(
+    req: Request<RequestParams, ResponseData, RequestBody, QueryParams>,
+    res: Response,
+  ): Promise<void> {
+    const { body } = req;
+    const { ids } = body as unknown as { ids: string[] };
+    console.log("ids", ids);
+    const deleted = await ServicesService.bulkDeleteServices(ids);
+    ServicesController.sendHttpResponse(res, deleted);
   }
 }
