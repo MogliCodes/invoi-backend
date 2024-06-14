@@ -83,3 +83,22 @@ export type ClientData = {
 interface CustomHeaders extends Headers {
   userid?: string;
 }
+
+export interface RequestParams {
+  id: string;
+}
+
+export interface QueryParams {
+  page: number;
+  pageSize: number;
+  search: string;
+}
+
+export interface RequestBody {
+  key: string;
+  value: string;
+}
+
+export interface ResponseData {
+  message: string;
+}

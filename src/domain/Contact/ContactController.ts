@@ -2,27 +2,81 @@ import { Request, Response } from "express";
 import ContactModel from "./ContactModel.ts";
 import { faker } from "@faker-js/faker";
 import { consola } from "consola";
-
-interface RequestParams {
-  id: string;
-}
-
-interface QueryParams {
-  page: number;
-  pageSize: number;
-  search: string;
-}
-
-interface RequestBody {
-  key: string;
-  value: string;
-}
-
-interface ResponseData {
-  message: string;
-}
+import {
+  RequestParams,
+  ResponseData,
+  RequestBody,
+  QueryParams,
+} from "../../types.js";
 
 export default class ContactController {
+  /**
+   * @swagger
+   * /contacts/:
+   *   get:
+   *     tags:
+   *      - Contacts
+   *     summary: Retrieve a list of contacts
+   *     description: Fetch a paginated list of contacts for the user specified in the headers.
+   *     parameters:
+   *       - in: query
+   *         name: page
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *         description: The page number for pagination.
+   *       - in: query
+   *         name: pageSize
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *         description: The number of contacts per page.
+   *       - in: query
+   *         name: search
+   *         required: false
+   *         schema:
+   *           type: string
+   *         description: A search term to filter contacts by name.
+   *       - in: header
+   *         name: userid
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The ID of the user whose contacts are to be fetched.
+   *     responses:
+   *       200:
+   *         description: A list of contacts
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: object
+   *                 properties:
+   *                   _id:
+   *                     type: string
+   *                     description: The contact ID.
+   *                   firstname:
+   *                     type: string
+   *                     description: The contact's first name.
+   *                   lastname:
+   *                     type: string
+   *                     description: The contact's last name.
+   *                   email:
+   *                     type: string
+   *                     description: The contact's email address.
+   *                   phone:
+   *                     type: string
+   *                     description: The contact's phone number.
+   *       400:
+   *         description: Bad Request
+   *       401:
+   *         description: Unauthorized
+   *       500:
+   *         description: Internal Server Error
+   */
   public async getContacts(
     req: Request<RequestParams, ResponseData, RequestBody, QueryParams>,
     res: Response,
