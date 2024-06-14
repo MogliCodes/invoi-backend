@@ -43,6 +43,24 @@ export default class UserController {
     res.status(200).json(clients);
   }
 
+  public async getInvoicesByClient(
+    req: Request<RequestParams, ResponseData, RequestBody, QueryParams>,
+    res: Response,
+  ): Promise<void> {
+    // @ts-ignore
+    const { page, pageSize, client } = req.query;
+    console.log("GET INVOICES BY CLIENT", req.query);
+    const { headers } = req;
+    const invoices = await InvoiceModel.find({
+      user: headers.userid,
+      client,
+    })
+      .sort({ ["nr"]: 1 })
+      .skip((page - 1) * pageSize)
+      .limit(pageSize);
+    res.status(200).json(invoices);
+  }
+
   /**
    * @swagger
    * /invoice/{id}:
@@ -467,6 +485,48 @@ export default class UserController {
     );
 
     res.status(200).json(total);
+  }
+
+  public async getRevenueRangeOfCurrentYear(req: Request, res: Response) {
+    const { headers, query } = req;
+    console.log(headers.userid);
+    console.log("params", query);
+    const currentYear = new Date().getFullYear();
+    const months = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+    const monthlyRevenues = [];
+
+    for (let month = 0; month < 12; month++) {
+      const invoices = await InvoiceModel.find({
+        user: headers.userid,
+        date: {
+          $gte: new Date(currentYear, month, 1),
+          $lt: new Date(currentYear, month + 1, 0),
+        },
+      });
+
+      // Accumulate the total of all invoices
+      const total = invoices.reduce(
+        (acc, invoice) => acc + parseInt(invoice?.total || ""),
+        0,
+      );
+
+      monthlyRevenues.push({ month: months[month], y: total });
+    }
+
+    res.status(200).json(monthlyRevenues);
   }
 
   public async getTaxOfCurrentMonth(

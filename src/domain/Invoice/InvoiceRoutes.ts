@@ -9,10 +9,15 @@ const upload = multer({ storage: storage });
 
 router.get("/", invoiceController.getAllInvoices);
 router.get("/count", invoiceController.getInvoicesCount);
+router.get("/client", invoiceController.getInvoicesByClient);
 router.post("/bulk/delete", invoiceController.bulkDeleteInvoices);
 router.post("/", invoiceController.createInvoice);
 router.post("/pdf", invoiceController.createInvoicePdf);
 router.get("/number", invoiceController.getNewInvoiceNumber);
+router.get(
+  "/revenue/range/year",
+  invoiceController.getRevenueRangeOfCurrentYear,
+);
 router.get("/revenue/quarter", invoiceController.getRevenueOfCurrentQuarter);
 router.get("/revenue/year", invoiceController.getRevenueOfCurrentYear);
 router.get("/revenue/month", invoiceController.getRevenueOfCurrentMonth);

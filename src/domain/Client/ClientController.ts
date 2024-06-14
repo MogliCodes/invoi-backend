@@ -110,4 +110,9 @@ export default class ClientController {
       res.status(500).json({ message: "Error creating demo clients" });
     }
   }
+
+  public async createProject(req: Request, res: Response): Promise<void> {
+    console.log("createProject");
+    res.status(200).json({ message: "createProject" } as any);
+  }
 }
