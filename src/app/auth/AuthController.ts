@@ -42,7 +42,11 @@ export default class AuthController {
     const { username, password } = req.body;
     try {
       const user = await UserModel.findOne().where("username").equals(username);
-      if (!user) throw Error("No user found");
+      if (!user) {
+        const error = new Error("No user found in database.");
+        res.status(404).json({ status: 404, error: error.message });
+        return;
+      }
 
       const isPasswordMatch = await bcrypt.compare(
         password,
@@ -58,7 +62,11 @@ export default class AuthController {
         });
         res
           .status(200)
-          .json({ id: user.id, username: user.username, token: token });
+          .json({
+            status: 200,
+            message: "Login successful",
+            data: { id: user.id, username: user.username, token: token },
+          });
       } else {
         console.log("NOOOO");
         res.status(401).json({ status: 401, error: "Password does not match" });
