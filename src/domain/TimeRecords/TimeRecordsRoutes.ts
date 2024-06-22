@@ -33,4 +33,6 @@ router.post(
   TimeRecordsController.createTimeRecord,
 );
 
+router.patch("/:id", logBody(), TimeRecordsController.updateTimeRecord);
+
 export default router;

@@ -10,9 +10,23 @@ export default class TimeRecordsController {
   ): Promise<void> {
     try {
       const { headers } = req;
-      console.log("headers", headers);
-      console.log("userid", headers.userid);
-      const timeRecords = await TimeRecord.find({ userId: headers.userid });
+
+      const filter = {};
+      if (headers.userid) {
+        // @ts-ignore
+        filter["userId"] = headers.userid;
+      }
+      if (req.query.clientId) {
+        // @ts-ignore
+        filter["clientId"] = req.query.clientId;
+      }
+
+      if (req.query.projectId) {
+        // @ts-ignore
+        filter["projectId"] = req.query.projectId;
+      }
+
+      const timeRecords = await TimeRecord.find(filter);
       res.status(200).json(timeRecords);
     } catch (error: unknown) {
       let message = "Unknown Error";
@@ -39,8 +53,6 @@ export default class TimeRecordsController {
         endTime,
         description,
       } = req.body;
-      console.log("body", req.body);
-      console.log("=================");
       const newTimeRecord = new TimeRecord({
         userId,
         clientId,
@@ -50,12 +62,41 @@ export default class TimeRecordsController {
         endTime,
         description,
       });
-
-      console.log("newTimeRecord", newTimeRecord);
-
       const response = TimeRecordsModel.create(newTimeRecord);
-      console.log("response", response);
       res.status(201).json(newTimeRecord);
+    } catch (error) {
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+
+  public static async updateTimeRecord(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    try {
+      const { id } = req.params;
+      console.log("id", id);
+      const {
+        userId,
+        clientId,
+        projectId,
+        serviceId,
+        startTime,
+        endTime,
+        description,
+      } = req.body;
+      console.log("req.body", req.body);
+      const updatedTimeRecord = await TimeRecordsModel.updateOne(
+        { _id: id },
+        {
+          startTime,
+          endTime,
+        },
+        { upsert: true },
+      );
+      console.log("updatedTimeRecord", updatedTimeRecord);
+
+      res.status(200).json(updatedTimeRecord);
     } catch (error) {
       res.status(500).json({ error: "Server error" });
     }
