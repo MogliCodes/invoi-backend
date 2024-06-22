@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const contactSchema = new mongoose.Schema({
   firstname: {
@@ -35,6 +35,11 @@ const contactSchema = new mongoose.Schema({
   },
   user: {
     type: String,
+    required: true,
+  },
+  client: {
+    type: Schema.Types.ObjectId,
+    ref: "Client",
     required: true,
   },
 });
