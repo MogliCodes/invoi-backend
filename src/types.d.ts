@@ -62,6 +62,7 @@ export interface RequestParams {
 export interface QueryParams {
   page: number;
   pageSize: number;
+  clientId: string;
 }
 
 export interface RequestBody {

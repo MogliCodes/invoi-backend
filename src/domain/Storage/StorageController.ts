@@ -26,7 +26,10 @@ export default class StorageController {
       consola.success(
         `Successfully established connection to Minio at ${ENDPOINT}:${PORT}`,
       );
-      consola.info("Buckets", buckets);
+      consola.info(
+        "Buckets found: ",
+        buckets.map((bucket) => bucket.name).join(", ") || "No buckets found",
+      );
       try {
         const __dirname = new URL(".", import.meta.url).pathname;
         // Get a file as test buffer to upload

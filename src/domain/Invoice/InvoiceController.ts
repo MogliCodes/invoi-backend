@@ -49,7 +49,6 @@ export default class UserController {
   ): Promise<void> {
     // @ts-ignore
     const { page, pageSize, client } = req.query;
-    console.log("GET INVOICES BY CLIENT", req.query);
     const { headers } = req;
     const invoices = await InvoiceModel.find({
       user: headers.userid,

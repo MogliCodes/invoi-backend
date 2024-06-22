@@ -9,6 +9,11 @@ import {
   QueryParams,
 } from "../../types.js";
 
+type ContactFilter = {
+  user: string;
+  client?: string;
+};
+
 export default class ContactController {
   /**
    * @swagger
@@ -82,13 +87,20 @@ export default class ContactController {
     res: Response,
   ): Promise<void> {
     const { headers } = req;
-    const { page, pageSize, search } = req.query;
-    const contacts = await ContactModel.find({
-      user: headers?.userid,
-    })
+    const { page, pageSize, search, clientId } = req.query;
+    console.log("clientId", clientId);
+
+    const filter: ContactFilter = { user: headers?.userid as string };
+
+    if (clientId) {
+      filter["client"] = clientId;
+    }
+
+    const contacts = await ContactModel.find(filter)
       .sort({ ["lastname"]: 1 })
       .skip((page - 1) * pageSize)
       .limit(pageSize);
+    console.log("contacts", contacts);
     res.status(200).json(contacts);
   }
 
@@ -96,6 +108,7 @@ export default class ContactController {
     req: Request<RequestParams, ResponseData, RequestBody, QueryParams>,
     res: Response,
   ): Promise<void> {
+    console.log("getContactById");
     const { headers } = req;
     const { id } = req.params;
     const contact = await ContactModel.findOne({

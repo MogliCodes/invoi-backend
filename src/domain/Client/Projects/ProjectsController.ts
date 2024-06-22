@@ -18,9 +18,7 @@ declare global {
 
 export default class ProjectsController {
   async getAllProjectsByClientId(req: Request, res: Response) {
-    console.log("getAllProjectsByClientId");
     const { params } = req;
-    console.log(params.id);
     try {
       const projects = await ProjectsModel.find({ client: params.id });
       res.status(200).json(projects);
@@ -31,10 +29,8 @@ export default class ProjectsController {
   }
 
   async getAllProjectsByUserId(req: Request, res: Response) {
-    console.log("getAllProjectsByUserId");
     const { userid } = req.headers;
     if (!userid) return;
-    console.log(userid);
     try {
       // Retrieve query parameters if needed
       const { clientId, queryParam2 } = req.query;
@@ -55,11 +51,8 @@ export default class ProjectsController {
     }
   }
   async createProject(req: Request, res: Response) {
-    console.log("createProject");
     const { client, title, description } = req.body;
     const { headers } = req;
-    console.log(headers.userid);
-    console.log(req.body);
     const project = new ProjectsModel({
       client,
       title,
@@ -77,7 +70,6 @@ export default class ProjectsController {
   }
 
   async deleteProject(req: Request, res: Response) {
-    console.log("deleteProject");
     const { id } = req.params;
     try {
       const response = await ProjectsModel.deleteOne({ _id: id });
