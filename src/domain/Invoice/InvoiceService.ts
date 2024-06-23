@@ -28,6 +28,7 @@ type InvoicePosition = {
 type InvoiceData = {
   nr: string;
   client: string;
+  contact?: string;
   title: string;
   date: string;
   performancePeriodStart: string;
@@ -51,6 +52,7 @@ export default class InvoiceService {
     invoiceData: InvoiceData,
     clientData: ClientData | any,
     settingsData: any,
+    contactData: any,
   ): Promise<Buffer> {
     const maxCharsPerPage = 900;
     let currentPageChars = 0;
@@ -98,6 +100,7 @@ export default class InvoiceService {
           subtotal,
           clientData,
           settingsData,
+          contactData,
         );
         allPagesHtml += pageHtml;
 
@@ -120,6 +123,7 @@ export default class InvoiceService {
       0,
       clientData,
       settingsData,
+      contactData,
     );
     allPagesHtml += lastPageHtml;
 
@@ -138,6 +142,7 @@ export default class InvoiceService {
     subtotal: number = 0,
     client: ClientData,
     settingsData: any,
+    contactData: any,
   ): Promise<string> {
     const page = await browser.newPage();
     const isLastPage = currentPageIndex === numberOfPages;
@@ -188,6 +193,7 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
       zip: client.zip,
       city: client.city,
       nr: invoiceData.nr,
+      contact: `${contactData.firstname} ${contactData.lastname}`,
       title: invoiceData.title,
       date: invoiceData.date,
       performancePeriodStart: invoiceData.performancePeriodStart,

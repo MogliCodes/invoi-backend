@@ -21,6 +21,7 @@ import type {
 } from "../../types.d.ts";
 import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
 import TemplatesModel from "./TemplatesModel.ts";
+import ContactModel from "../Contact/ContactModel.js";
 export default class UserController {
   public sendHttpResponse<T>(res: Response, data: Array<T> | string) {
     if (data && data.length > 0) {
@@ -181,11 +182,19 @@ export default class UserController {
         res.status(404).json({ error: "Settings not found" });
         return;
       }
+      let contactData;
+      if (invoiceData.contact) {
+        contactData = await ContactModel.findOne({
+          user: headers?.userid,
+          _id: invoiceData.contact,
+        });
+      }
 
       const pdfBuffer: Buffer = await InvoiceService.createPdf(
         invoiceData,
         clientData,
         settingsData,
+        contactData,
       );
 
       const fileName = generateFileName(clientData as ClientData, invoiceData);
@@ -341,6 +350,7 @@ export default class UserController {
       const currentYear = new Date().getFullYear();
       const searchQuery = `^${currentYear}`;
       const query = await InvoiceModel.find({ nr: new RegExp(searchQuery) });
+      // TODO: MAKE DYNAMIC
       const latestInvoice = await InvoiceModel.findOne({
         nr: { $regex: /^2024-\d+$/ },
       }) // Match the pattern "YYYY-NNN"
@@ -351,12 +361,15 @@ export default class UserController {
         res.send(400);
         return;
       }
+
+      console.log("latestInvoice", latestInvoice);
+      console.log("latestInvoice.nr", latestInvoice.nr);
       // Given invoice number
       const currentInvoiceNumber = latestInvoice.nr;
 
       // Extract the numeric part
       const numericPart = parseInt(currentInvoiceNumber.split("-")[1]);
-
+      console.log("numericPart", numericPart);
       // Increment the numeric part
       const incrementedNumericPart = numericPart + 1;
 
@@ -365,12 +378,12 @@ export default class UserController {
         3,
         "0",
       )}`;
+      console.log("newInvoiceNumber", newInvoiceNumber);
 
       if (!query.length) {
         res.json({ number: `${currentYear}-001` });
       } else {
         res.json(newInvoiceNumber);
-        console.log("query", query);
       }
     } catch (error) {
       console.error(error);
@@ -381,6 +394,7 @@ export default class UserController {
   public async createInvoicePdf(req: Request, res: Response): Promise<void> {
     const invoiceData = req.body;
     const { headers } = req;
+    console.log("invoiceData", invoiceData.client);
     const clientData = await ClientModel.findOne({
       user: headers?.userid,
       _id: invoiceData.client,
@@ -389,7 +403,21 @@ export default class UserController {
     const settingsData = await SettingsModel.findOne({
       user: headers?.userid,
     });
-    await InvoiceService.createPdf(invoiceData, clientData, settingsData);
+
+    let contactData;
+    if (invoiceData.contact) {
+      contactData = await ContactModel.findOne({
+        user: headers?.userid,
+        _id: invoiceData.contact,
+      });
+    }
+
+    await InvoiceService.createPdf(
+      invoiceData,
+      clientData,
+      settingsData,
+      contactData,
+    );
     consola.success("Created pdf");
     res.json({ message: "Created pdf" });
   }

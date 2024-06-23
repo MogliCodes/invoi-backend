@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const invoiceSchema = new mongoose.Schema({
   nr: {
@@ -8,6 +8,11 @@ const invoiceSchema = new mongoose.Schema({
   client: {
     type: String,
     required: true,
+  },
+  contact: {
+    type: Schema.Types.ObjectId,
+    ref: "Contact",
+    required: false,
   },
   title: {
     type: String,
