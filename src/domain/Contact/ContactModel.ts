@@ -11,27 +11,31 @@ const contactSchema = new mongoose.Schema({
   },
   email: {
     type: String,
+    required: false,
   },
   dob: {
     type: Date,
+    required: false,
   },
   street: {
     type: String,
-    required: true,
+    required: false,
   },
   zip: {
     type: String,
-    required: true,
+    required: false,
   },
   city: {
     type: String,
-    required: true,
+    required: false,
   },
   avatar: {
     type: String,
+    required: false,
   },
   category: {
     type: String,
+    required: false,
   },
   user: {
     type: String,
