@@ -1,13 +1,40 @@
 import { Request, Response } from "express";
 import Pdfjs from "pdfjs-dist";
 import Papa from "papaparse";
-import InvoiceModel from "./InvoiceModel.ts";
-import InvoiceService from "./InvoiceService.ts";
-import ClientModel from "../Client/ClientModel.ts";
 import { consola } from "consola";
+
+import TemplatesModel from "./TemplatesModel.ts";
+import ContactModel from "../Contact/ContactModel.ts";
+import InvoiceModel from "./InvoiceModel.ts";
+import InvoiceDraftModel from "./InvoiceDraftModel.ts";
+
+import ClientModel from "../Client/ClientModel.ts";
 import SettingsModel from "../Settings/SettingsModel.ts";
+import InvoiceService from "./InvoiceService.ts";
 import StorageController from "../Storage/StorageController.ts";
-import { formatTextToCSV, generateFileName } from "./InvoiceUtilities.ts";
+import {
+  formatTextToCSV,
+  generateFileName,
+  isInvoiceDue,
+} from "./InvoiceUtilities.ts";
+
+type Invoice = {
+  _id: string;
+  title: string;
+  nr: string;
+  client: string;
+  project: string;
+  date: Date;
+  performancePeriodStart: Date;
+  performancePeriodEnd: Date;
+  items: string;
+  status: string;
+  total: number;
+  taxes: number;
+  contact: string;
+  totalWithTaxes: number;
+  storagePath: string;
+};
 
 import type {
   ClientData,
@@ -20,8 +47,7 @@ import type {
   ResponseData,
 } from "../../types.d.ts";
 import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
-import TemplatesModel from "./TemplatesModel.ts";
-import ContactModel from "../Contact/ContactModel.js";
+
 export default class UserController {
   public sendHttpResponse<T>(res: Response, data: Array<T> | string) {
     if (data && data.length > 0) {
@@ -362,14 +388,11 @@ export default class UserController {
         return;
       }
 
-      console.log("latestInvoice", latestInvoice);
-      console.log("latestInvoice.nr", latestInvoice.nr);
       // Given invoice number
       const currentInvoiceNumber = latestInvoice.nr;
 
       // Extract the numeric part
       const numericPart = parseInt(currentInvoiceNumber.split("-")[1]);
-      console.log("numericPart", numericPart);
       // Increment the numeric part
       const incrementedNumericPart = numericPart + 1;
 
@@ -378,7 +401,6 @@ export default class UserController {
         3,
         "0",
       )}`;
-      console.log("newInvoiceNumber", newInvoiceNumber);
 
       if (!query.length) {
         res.json({ number: `${currentYear}-001` });
@@ -726,5 +748,59 @@ export default class UserController {
     console.log("DELETE ID", id);
     await TemplatesModel.findByIdAndDelete(id);
     res.json({ message: "Deleted template", status: 200 });
+  }
+
+  public async getInvoiceDrafts(req: Request, res: Response): Promise<void> {
+    const { headers } = req;
+    console.log("headers", headers.userid);
+    const drafts = await InvoiceDraftModel.find({ user: headers.userid });
+    console.log("drafts", drafts);
+    res.status(200).json(drafts);
+  }
+
+  public async createInvoiceDraft(req: Request, res: Response): Promise<void> {
+    const invoiceDraftData = req.body;
+    const headers = req.headers as CustomHeaders;
+    console.log("invoiceDraftData", invoiceDraftData);
+    try {
+      const invoiceDraft = await InvoiceDraftModel.create(invoiceDraftData);
+      res.status(201).json({
+        status: 201,
+        message: "Successfully created invoice draft",
+        invoiceDraft,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Error creating invoice draft" });
+    }
+  }
+
+  public async setInvoiceStatus(req: Request, res: Response): Promise<void> {
+    const invoices: Array<Invoice> = await InvoiceModel.find();
+    const unpaidInvoices = invoices.filter(
+      (invoice) => invoice.status !== "paid",
+    );
+
+    // loop over all invoices, if invoice is due, set status to overdue by patching this invoice
+    for (const invoice of unpaidInvoices) {
+      if (isInvoiceDue(invoice)) {
+        const query = { _id: invoice._id };
+        const options = { upsert: true };
+        const updatedInvoice = { status: "overdue" };
+        InvoiceModel.updateOne(query, updatedInvoice, options)
+          .then((result) => {
+            const { matchedCount, modifiedCount } = result;
+            if (matchedCount && modifiedCount) {
+              console.log(`Successfully updated invoice status.`);
+            }
+          })
+          .catch((err) =>
+            console.error(`Failed to update invoice status: ${err}`),
+          );
+      }
+    }
+
+    console.log("invoices", invoices);
+    res.json({ data: invoices });
   }
 }

@@ -7,6 +7,9 @@ const router: Router = Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
+router.get("/draft", invoiceController.getInvoiceDrafts);
+router.post("/draft", invoiceController.createInvoiceDraft);
+
 router.get("/", invoiceController.getAllInvoices);
 router.get("/count", invoiceController.getInvoicesCount);
 router.get("/client", invoiceController.getInvoicesByClient);
@@ -46,6 +49,7 @@ router.post(
   upload.single("pdfFile"),
   invoiceController.importPdfInvoiceData,
 );
+router.patch("/set-status", invoiceController.setInvoiceStatus);
 router.patch("/:id/mark-as-paid", invoiceController.markInvoiceAsPaid);
 router.delete("/:id", invoiceController.deleteInvoice);
 

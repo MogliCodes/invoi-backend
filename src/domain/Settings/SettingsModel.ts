@@ -60,6 +60,34 @@ const settingsSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  invoiceNumberSchema: {
+    type: String,
+    required: false,
+  },
+  additionalTextForEndOfInvoices: {
+    type: String,
+    required: false,
+  },
+  additionalTextForReverseChargeInvoices: {
+    type: String,
+    required: false,
+  },
+  defaultRateType: {
+    type: String,
+    required: false,
+  },
+  defaultHourlyRate: {
+    type: Number,
+    required: false,
+  },
+  defaultDailyRate: {
+    type: Number,
+    required: false,
+  },
+  defaultTaxRate: {
+    type: Number,
+    required: false,
+  },
 });
 
 const SettingsSchema = mongoose.model("Settings", settingsSchema);

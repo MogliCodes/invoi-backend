@@ -59,4 +59,5 @@ app.use("/restapi/time-records", timeRecordsRoutes);
 
 app.listen(port, () => {
   consola.success(`App is listening on port ${port}`);
+  consola.success(`App is listening on port ${port}`);
 });

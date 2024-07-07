@@ -185,3 +185,27 @@ export function formatTextToCSV(text: string): string {
   const csvRows = rowsAndColumns.map((columns) => columns.join(","));
   return [headers.join(","), ...csvRows].join("\n");
 }
+
+type Invoice = {
+  _id: string;
+  title: string;
+  nr: string;
+  client: string;
+  project: string;
+  date: Date;
+  performancePeriodStart: Date;
+  performancePeriodEnd: Date;
+  items: string;
+  status: string;
+  total: number;
+  taxes: number;
+  contact: string;
+  totalWithTaxes: number;
+  storagePath: string;
+};
+
+export function isInvoiceDue(invoice: Invoice): boolean {
+  const dueDate = new Date(invoice.date);
+  dueDate.setDate(dueDate.getDate() + 14);
+  return dueDate < new Date();
+}
