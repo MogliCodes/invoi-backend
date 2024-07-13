@@ -115,4 +115,18 @@ export default class ClientController {
     console.log("createProject");
     res.status(200).json({ message: "createProject" } as any);
   }
+
+  public async bulkDeleteClients(req: Request, res: Response): Promise<void> {
+    const { ids } = req.body;
+    try {
+      const result = await ClientModel.deleteMany({ _id: { $in: ids } });
+      console.log(result);
+      res
+        .status(200)
+        .json({ status: 200, message: "Successfully deleted clients" });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Error deleting clients" });
+    }
+  }
 }
