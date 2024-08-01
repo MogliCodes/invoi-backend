@@ -19,7 +19,7 @@ export type InvoiceModel = {
   date: Date;
 };
 
-export type InvoicePosition = {
+type InvoicePosition = {
   position: number;
   description: string;
   hours: number;

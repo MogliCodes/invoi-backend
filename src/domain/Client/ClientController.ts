@@ -117,9 +117,9 @@ export default class ClientController {
   }
 
   public async bulkDeleteClients(req: Request, res: Response): Promise<void> {
-    const { ids } = req.body;
+    const { body } = req;
     try {
-      const result = await ClientModel.deleteMany({ _id: { $in: ids } });
+      const result = await ClientModel.deleteMany({ _id: { $in: body } });
       console.log(result);
       res
         .status(200)
