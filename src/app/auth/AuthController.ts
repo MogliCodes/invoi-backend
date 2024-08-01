@@ -60,13 +60,11 @@ export default class AuthController {
         token = jwt.sign({ id: user.id, username: user.username }, jwtSecret, {
           expiresIn: "30d",
         });
-        res
-          .status(200)
-          .json({
-            status: 200,
-            message: "Login successful",
-            data: { id: user.id, username: user.username, token: token },
-          });
+        res.status(200).json({
+          status: 200,
+          message: "Login successful",
+          data: { id: user.id, username: user.username, token: token },
+        });
       } else {
         console.log("NOOOO");
         res.status(401).json({ status: 401, error: "Password does not match" });
