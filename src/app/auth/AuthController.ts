@@ -11,6 +11,11 @@ export default class AuthController {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { username, email, password } = req.body;
 
+    // Validate request body
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
     try {
       const userExists = await UserModel.findOne()
         .where("username")

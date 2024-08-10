@@ -62,7 +62,9 @@ export default class ProjectsController {
     try {
       const response = await project.save();
       console.log(response);
-      res.status(201).json(project);
+      res
+        .status(201)
+        .json({ data: project, message: "Project created", status: 201 });
     } catch (error) {
       // @ts-ignore
       res.status(500).json({ message: error.message });
