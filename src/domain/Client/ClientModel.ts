@@ -1,6 +1,15 @@
-import mongoose from "mongoose";
+import mongoose, { Document, Model, Schema } from "mongoose";
 
-const clientSchema = new mongoose.Schema({
+export interface IClient extends Document {
+  company: string;
+  street?: string;
+  zip?: string;
+  city?: string;
+  taxId?: string;
+  user: string;
+}
+
+const clientSchema: Schema<IClient> = new Schema({
   company: {
     type: String,
     required: true,
@@ -22,6 +31,11 @@ const clientSchema = new mongoose.Schema({
     required: true,
   },
 });
-const ClientSchema = mongoose.model("Client", clientSchema);
 
-export default ClientSchema;
+// Create the model using the schema
+const ClientModel: Model<IClient> = mongoose.model<IClient>(
+  "Client",
+  clientSchema,
+);
+
+export default ClientModel;

@@ -16,6 +16,9 @@ import {
 } from "./InvoiceUtilities.ts";
 import { consola } from "consola";
 import fs from "fs";
+import ClientModel, { IClient } from "../Client/ClientModel.ts";
+import SettingsModel, { ISettings } from "../Settings/SettingsModel.js";
+import ContactModel, { IContact } from "../Contact/ContactModel.js";
 
 type InvoicePosition = {
   position: number;
@@ -47,6 +50,16 @@ type ClientData = {
   city: string;
 };
 
+export interface FetchDataForInvoiceCreationResponse {
+  data: {
+    clientData: IClient | null;
+    settingsData: ISettings | null;
+    contactData: IContact | null;
+  } | null;
+  status: number;
+  message: string;
+}
+
 export default class InvoiceService {
   static async createPdf(
     invoiceData: InvoiceData,
@@ -66,7 +79,7 @@ export default class InvoiceService {
     );
 
     consola.info(
-      isReverseChargeInvoice ? "Reverse charged invoice" : "Normal invoice",
+      isReverseChargeInvoice ? "Reverse charged invoice" : "Standard invoice",
     );
 
     // Create a browser instance
@@ -185,7 +198,6 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
     const additionalText = invoiceData.isReverseChargeInvoice
       ? additionalTextReverseCharge
       : additionalTextDefault;
-    console.log("settingsData", settingsData);
     // Render the template
     const html = template({
       company: client.company,
@@ -193,7 +205,7 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
       zip: client.zip,
       city: client.city,
       nr: invoiceData.nr,
-      contact: `${contactData.firstname} ${contactData.lastname}`,
+      contact: `${contactData?.firstname} ${contactData?.lastname}`,
       title: invoiceData.title,
       date: invoiceData.date,
       performancePeriodStart: invoiceData.performancePeriodStart,
@@ -277,5 +289,67 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
     await browser.close();
 
     return pdfBuffer;
+  }
+
+  static async fetchDataForInvoiceCreation(
+    userId: string,
+    clientId: string,
+    contactId: string,
+  ): Promise<FetchDataForInvoiceCreationResponse> {
+    if (!userId || !clientId) {
+      return { data: null, status: 400, message: "Missing parameters" };
+    }
+    if (!contactId) {
+      consola.info("Invoice without contact");
+    }
+
+    const clientData: IClient | null = await ClientModel.findOne({
+      user: userId,
+      _id: clientId,
+    });
+    if (!clientData) {
+      return { data: null, status: 404, message: "Client not found" };
+    }
+    consola.success(
+      "Successfully fetched client data for client: ",
+      clientData.company,
+    );
+
+    const settingsData: ISettings | null = await SettingsModel.findOne({
+      user: userId,
+    });
+    if (!settingsData) {
+      return { data: null, status: 404, message: "Settings not found" };
+    }
+    consola.success(
+      "Successfully fetched settings data for user: ",
+      settingsData.username,
+    );
+
+    let contactData: IContact | null = null;
+    if (contactId) {
+      contactData = await ContactModel.findOne({
+        user: userId,
+        _id: contactId,
+      });
+      if (contactData) {
+        consola.success(
+          "Successfully fetched contact data for contact: ",
+          `${contactData.firstname} ${contactData.lastname}`,
+        );
+      }
+    } else {
+      consola.info("Invoice without contact");
+    }
+
+    return {
+      data: {
+        clientData,
+        settingsData,
+        contactData,
+      },
+      status: 200,
+      message: "Data retrieved successfully",
+    };
   }
 }

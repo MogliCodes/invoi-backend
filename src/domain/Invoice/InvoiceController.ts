@@ -10,7 +10,9 @@ import InvoiceDraftModel from "./InvoiceDraftModel.ts";
 
 import ClientModel from "../Client/ClientModel.ts";
 import SettingsModel from "../Settings/SettingsModel.ts";
-import InvoiceService from "./InvoiceService.ts";
+import InvoiceService, {
+  FetchDataForInvoiceCreationResponse,
+} from "./InvoiceService.ts";
 import StorageController from "../Storage/StorageController.ts";
 import {
   formatTextToCSV,
@@ -192,65 +194,64 @@ export default class UserController {
     const invoiceData = req.body;
     const headers = req.headers as CustomHeaders;
 
-    try {
-      const clientData = await ClientModel.findOne({
-        user: headers?.userid,
-        _id: invoiceData.client,
-      });
-      if (!clientData) {
-        res.status(404).json({ error: "Client not found" });
-        return;
-      }
-      const settingsData = await SettingsModel.findOne({
-        user: headers?.userid,
-      });
-      if (!settingsData) {
-        res.status(404).json({ error: "Settings not found" });
-        return;
-      }
-      let contactData;
-      if (invoiceData.contact) {
-        contactData = await ContactModel.findOne({
-          user: headers?.userid,
-          _id: invoiceData.contact,
-        });
-      }
+    const userId: string = headers.userid || "";
+    const clientId: string = invoiceData.client || "";
+    const contactId: string = invoiceData.contact || "";
 
-      const pdfBuffer: Buffer = await InvoiceService.createPdf(
-        invoiceData,
-        clientData,
-        settingsData,
-        contactData,
+    consola.info("Initiating invoice creation. Fetching data for invoice...");
+    const invoiceDataForInvoiceCreation: FetchDataForInvoiceCreationResponse =
+      await InvoiceService.fetchDataForInvoiceCreation(
+        userId,
+        clientId,
+        contactId,
       );
 
-      const fileName = generateFileName(clientData as ClientData, invoiceData);
-      const bucketName = "invoices";
-
-      // Upload directly to MinIO
-      try {
-        const minioClient = await StorageController.createStorageClient();
-        if (!minioClient) {
-          const error = new Error("Failed to create MinIO client");
-          console.error(error);
-        }
-        if (!minioClient) return;
-        await minioClient.putObject(bucketName, fileName, pdfBuffer);
-        consola.success(`Uploaded invoice to MinIO: ${fileName}`);
-      } catch (error) {
-        consola.error("Error uploading to MinIO:", error);
-        res.status(500).json({ error: "Error uploading to MinIO" });
-      }
-      const invoice = await InvoiceModel.create(invoiceData);
-      res.status(201).json({
-        status: 201,
-        message: "Successfully created invoice",
-        link: `${fileName}.pdf`,
-        invoice,
-      });
-    } catch (error) {
-      console.error(error);
+    if (!invoiceDataForInvoiceCreation || !invoiceDataForInvoiceCreation.data) {
+      consola.error("Error getting client and settings data");
       res.status(500).json({ error: "Error getting client and settings data" });
+      return;
     }
+    consola.success(
+      "Successfully fetched data for invoice creation. Now creating PDF...",
+    );
+
+    const { clientData, settingsData, contactData } =
+      invoiceDataForInvoiceCreation.data;
+
+    const pdfBuffer: Buffer = await InvoiceService.createPdf(
+      invoiceData,
+      clientData,
+      settingsData,
+      contactData,
+    );
+    consola.success("Successfully created PDF. Now uploading to MinIO...");
+
+    const fileName = generateFileName(clientData as ClientData, invoiceData);
+    const bucketName = userId;
+
+    // Upload directly to MinIO
+    try {
+      const minioClient = await StorageController.createStorageClient();
+      if (!minioClient) {
+        const error = new Error("Failed to create MinIO client");
+        console.error(error);
+      }
+      if (!minioClient) return;
+      await minioClient.putObject(bucketName, fileName, pdfBuffer);
+      consola.success(`Successfully uploaded invoice to MinIO: ${fileName}`);
+    } catch (error) {
+      consola.error("Error uploading to MinIO:", error);
+      res.status(500).json({ error: "Error uploading to MinIO" });
+    }
+    const invoice = await InvoiceModel.create(invoiceData);
+    consola.success("Successfully created invoice in MongoDB");
+    consola.success("Invoice creation completed successfully");
+    res.status(201).json({
+      status: 201,
+      message: "Successfully created invoice",
+      link: `${fileName}.pdf`,
+      invoice,
+    });
   }
 
   /**
@@ -676,14 +677,11 @@ export default class UserController {
     if (req.file && req.file?.buffer) {
       const { headers } = req;
       const { templatename, templatetags } = headers;
-      console.log("headers", headers);
-      console.log("uploadCustomTemplates", templatename, templatetags);
-
-      const htmlFile = req.file?.buffer?.toString();
-      const htmlBuffer = Buffer.from(htmlFile, "utf-8");
-
-      const bucketName = "templates";
-      const fileName = req.file.originalname;
+      const userId = req.params.userId; // Assumes userId is in URL parameters
+      const invoiceName = req.body.invoiceName; // Assumes invoiceName is in the request body
+      const bucketName = userId;
+      const fileName = req.file.originalname; // Original name of the uploaded file
+      const filePath = `/${userId}/invoices/${invoiceName}`; // Construct the path
       let uploadedObjectInfo;
       try {
         const minioClient = await StorageController.createStorageClient();
@@ -694,8 +692,8 @@ export default class UserController {
         if (!minioClient) return;
         uploadedObjectInfo = await minioClient.putObject(
           bucketName,
-          fileName,
-          htmlBuffer,
+          filePath,
+          req.file.buffer, // Use the buffer from the uploaded file
         );
         consola.success(`Uploaded invoice to MinIO: ${fileName}`);
         res
@@ -752,16 +750,13 @@ export default class UserController {
 
   public async getInvoiceDrafts(req: Request, res: Response): Promise<void> {
     const { headers } = req;
-    console.log("headers", headers.userid);
     const drafts = await InvoiceDraftModel.find({ user: headers.userid });
-    console.log("drafts", drafts);
     res.status(200).json(drafts);
   }
 
   public async createInvoiceDraft(req: Request, res: Response): Promise<void> {
     const invoiceDraftData = req.body;
     const headers = req.headers as CustomHeaders;
-    console.log("invoiceDraftData", invoiceDraftData);
     try {
       const invoiceDraft = await InvoiceDraftModel.create(invoiceDraftData);
       res.status(201).json({

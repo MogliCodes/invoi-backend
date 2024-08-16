@@ -1,6 +1,22 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Document, Model, Schema } from "mongoose";
 
-const contactSchema = new mongoose.Schema({
+// Define an interface representing a Contact document in MongoDB
+export interface IContact extends Document {
+  firstname: string;
+  lastname: string;
+  email?: string;
+  dob?: Date;
+  street?: string;
+  zip?: string;
+  city?: string;
+  avatar?: string;
+  category?: string;
+  user: string;
+  client: mongoose.Types.ObjectId;
+}
+
+// Define a schema for the Contact model
+const contactSchema: Schema<IContact> = new Schema({
   firstname: {
     type: String,
     required: true,
@@ -11,31 +27,24 @@ const contactSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: false,
   },
   dob: {
     type: Date,
-    required: false,
   },
   street: {
     type: String,
-    required: false,
   },
   zip: {
     type: String,
-    required: false,
   },
   city: {
     type: String,
-    required: false,
   },
   avatar: {
     type: String,
-    required: false,
   },
   category: {
     type: String,
-    required: false,
   },
   user: {
     type: String,
@@ -48,6 +57,10 @@ const contactSchema = new mongoose.Schema({
   },
 });
 
-const ContactSchema = mongoose.model("Contact", contactSchema);
+// Create the model using the schema
+const ContactModel: Model<IContact> = mongoose.model<IContact>(
+  "Contact",
+  contactSchema,
+);
 
-export default ContactSchema;
+export default ContactModel;

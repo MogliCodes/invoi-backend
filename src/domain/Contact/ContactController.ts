@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import ContactModel from "./ContactModel.ts";
+import ContactModel, { IContact } from "./ContactModel.ts";
 import { faker } from "@faker-js/faker";
 import { consola } from "consola";
 import {
@@ -87,7 +87,7 @@ export default class ContactController {
     res: Response,
   ): Promise<void> {
     const { headers } = req;
-    const { page, pageSize, search, clientId } = req.query;
+    const { page, pageSize, clientId } = req.query;
     console.log("clientId", clientId);
 
     const filter: ContactFilter = { user: headers?.userid as string };
@@ -96,7 +96,7 @@ export default class ContactController {
       filter["client"] = clientId;
     }
 
-    const contacts = await ContactModel.find(filter)
+    const contacts: Array<IContact> = await ContactModel.find(filter)
       .sort({ ["lastname"]: 1 })
       .skip((page - 1) * pageSize)
       .limit(pageSize);
@@ -111,7 +111,7 @@ export default class ContactController {
     console.log("getContactById");
     const { headers } = req;
     const { id } = req.params;
-    const contact = await ContactModel.findOne({
+    const contact: IContact | null = await ContactModel.findOne({
       user: headers?.userid,
       _id: id,
     });
@@ -124,7 +124,7 @@ export default class ContactController {
   ): Promise<void> {
     try {
       const { headers } = req;
-      const contactCount = await ContactModel.countDocuments({
+      const contactCount: number = await ContactModel.countDocuments({
         user: headers?.userid,
       });
       res.status(200).json(contactCount);
@@ -135,7 +135,7 @@ export default class ContactController {
   }
 
   public async createContact(req: Request, res: Response): Promise<void> {
-    const contact = await ContactModel.create(req.body);
+    const contact: IContact = await ContactModel.create(req.body);
     consola.box(contact);
     res
       .status(201)

@@ -4,6 +4,9 @@ import cors from "cors";
 import session from "express-session";
 import passport from "passport";
 import { logger } from "./logging.ts";
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+import { consola } from "consola";
 
 export const setupMiddleware = (app: express.Application) => {
   app.use(
@@ -24,4 +27,36 @@ export const setupMiddleware = (app: express.Application) => {
     res.locals.baseUrl = `${req.protocol}://${req.get("host")}`;
     next();
   });
+
+  // Apply isAuthenticated middleware to all routes except auth routes
+  app.use((req, res, next) => {
+    if (req.path.startsWith("/restapi/auth")) {
+      return next();
+    }
+    return isAuthenticated(req, res, next);
+  });
+};
+
+const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+  const jwtSecret = "your-secret-key";
+  const authHeader = req.headers.authorization;
+  const userId = req.headers.userid;
+
+  if (authHeader && userId) {
+    const token = authHeader;
+
+    jwt.verify(token, jwtSecret, (err, decoded) => {
+      if (err) {
+        consola.error(err);
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      if (decoded && (decoded as jwt.JwtPayload).id === userId) {
+        return next();
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    });
+  } else {
+    res.status(401).json({ message: "Unauthorized" });
+  }
 };

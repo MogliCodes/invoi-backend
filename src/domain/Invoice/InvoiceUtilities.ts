@@ -70,7 +70,6 @@ async function getTemplateFromStorage(objectName: string): Promise<unknown> {
 
     return new Promise((resolve, reject) => {
       dataStream.on("data", (chunk) => {
-        consola.info("chunk", chunk);
         templateData += chunk.toString();
       });
 
@@ -163,7 +162,7 @@ export function generateFileName(
   clientData: ClientData,
   invoiceData: InvoiceData,
 ) {
-  return `${invoiceData.nr}_${clientData.company.replace(
+  return `invoices/&${invoiceData.nr}_${clientData.company.replace(
     / /g,
     "-",
   )}_${invoiceData.title.replace(/ /g, "-")}.pdf`;

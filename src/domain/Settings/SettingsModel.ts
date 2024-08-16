@@ -1,6 +1,34 @@
-import mongoose from "mongoose";
+import mongoose, { Document, Model, Schema } from "mongoose";
 
-const settingsSchema = new mongoose.Schema({
+// Define an interface representing a Settings document in MongoDB
+export interface ISettings extends Document {
+  user: string;
+  username: string;
+  email: string;
+  firstname?: string;
+  lastname?: string;
+  street: string;
+  zipCode: string;
+  city: string;
+  phone?: string;
+  taxId?: string;
+  vatId?: string;
+  bankName: string;
+  iban: string;
+  bic: string;
+  currency: string;
+  language: string;
+  invoiceNumberSchema?: string;
+  additionalTextForEndOfInvoices?: string;
+  additionalTextForReverseChargeInvoices?: string;
+  defaultRateType?: string;
+  defaultHourlyRate?: number;
+  defaultDailyRate?: number;
+  defaultTaxRate?: number;
+}
+
+// Define a schema for the Settings model
+const settingsSchema: Schema<ISettings> = new Schema({
   user: {
     type: String,
     required: true,
@@ -62,33 +90,31 @@ const settingsSchema = new mongoose.Schema({
   },
   invoiceNumberSchema: {
     type: String,
-    required: false,
   },
   additionalTextForEndOfInvoices: {
     type: String,
-    required: false,
   },
   additionalTextForReverseChargeInvoices: {
     type: String,
-    required: false,
   },
   defaultRateType: {
     type: String,
-    required: false,
   },
   defaultHourlyRate: {
     type: Number,
-    required: false,
   },
   defaultDailyRate: {
     type: Number,
-    required: false,
   },
   defaultTaxRate: {
     type: Number,
-    required: false,
   },
 });
 
-const SettingsSchema = mongoose.model("Settings", settingsSchema);
-export default SettingsSchema;
+// Create the model using the schema
+const SettingsModel: Model<ISettings> = mongoose.model<ISettings>(
+  "Settings",
+  settingsSchema,
+);
+
+export default SettingsModel;
