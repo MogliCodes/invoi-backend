@@ -87,20 +87,23 @@ export default class ContactController {
     res: Response,
   ): Promise<void> {
     const { headers } = req;
+    if (!headers?.userid) {
+      res.status(401).json({ message: "Unauthorized" });
+    }
+    consola.info("Getting contacts for user: ", headers?.userid);
+
     const { page, pageSize, clientId } = req.query;
-    console.log("clientId", clientId);
-
     const filter: ContactFilter = { user: headers?.userid as string };
-
     if (clientId) {
       filter["client"] = clientId;
     }
+    consola.info("Using filters: ", filter);
 
     const contacts: Array<IContact> = await ContactModel.find(filter)
       .sort({ ["lastname"]: 1 })
       .skip((page - 1) * pageSize)
       .limit(pageSize);
-    console.log("contacts", contacts);
+    consola.log.raw(contacts);
     res.status(200).json(contacts);
   }
 
@@ -124,6 +127,7 @@ export default class ContactController {
   ): Promise<void> {
     try {
       const { headers } = req;
+      console.log("headers", headers);
       const contactCount: number = await ContactModel.countDocuments({
         user: headers?.userid,
       });
