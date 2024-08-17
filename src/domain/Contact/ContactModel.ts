@@ -12,7 +12,7 @@ export interface IContact extends Document {
   avatar?: string;
   category?: string;
   user: string;
-  client: mongoose.Types.ObjectId;
+  client?: mongoose.Types.ObjectId;
 }
 
 // Define a schema for the Contact model
@@ -53,7 +53,7 @@ const contactSchema: Schema<IContact> = new Schema({
   client: {
     type: Schema.Types.ObjectId,
     ref: "Client",
-    required: true,
+    required: false,
   },
 });
 

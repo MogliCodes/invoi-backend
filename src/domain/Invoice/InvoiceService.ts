@@ -77,7 +77,7 @@ export default class InvoiceService {
       transformedInvoiceData.items,
       maxCharsPerPage,
     );
-
+    console.info("createPdf", contactData);
     consola.info(
       isReverseChargeInvoice ? "Reverse charged invoice" : "Standard invoice",
     );
@@ -113,7 +113,7 @@ export default class InvoiceService {
           subtotal,
           clientData,
           settingsData,
-          contactData,
+          contactData ? contactData : false,
         );
         allPagesHtml += pageHtml;
 
@@ -195,6 +195,15 @@ export default class InvoiceService {
     const additionalTextReverseCharge = `Die Steuerschuld geht auf den Leistungsempfänger über. Bitte überweisen Sie den Rechnungsbetrag innerhalb von 14 Tagen nach Erhalt
 dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zusammenarbeit.`;
 
+    function getContactName(contactData: any): string | boolean {
+      if (contactData) {
+        return `${contactData.firstname} ${contactData.lastname}`;
+      }
+      return false;
+    }
+
+    const contactName = getContactName(contactData);
+
     const additionalText = invoiceData.isReverseChargeInvoice
       ? additionalTextReverseCharge
       : additionalTextDefault;
@@ -205,7 +214,7 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
       zip: client.zip,
       city: client.city,
       nr: invoiceData.nr,
-      contact: `${contactData?.firstname} ${contactData?.lastname}`,
+      contact: contactName,
       title: invoiceData.title,
       date: invoiceData.date,
       performancePeriodStart: invoiceData.performancePeriodStart,

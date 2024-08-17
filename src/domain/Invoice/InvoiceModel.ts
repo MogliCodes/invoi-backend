@@ -1,6 +1,25 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Document, Model, Schema } from "mongoose";
 
-const invoiceSchema = new mongoose.Schema({
+export interface IInvoice extends Document {
+  nr: string;
+  client: string;
+  contact?: Schema.Types.ObjectId;
+  title: string;
+  date?: Date;
+  performancePeriodStart?: Date;
+  performancePeriodEnd?: Date;
+  status?: string;
+  items?: string;
+  total?: string;
+  taxes?: string;
+  totalWithTaxes?: string;
+  file?: string;
+  user?: string;
+  isReverseChargeInvoice?: boolean;
+  storagePath?: string;
+}
+
+const invoiceSchema: Schema<IInvoice> = new Schema({
   nr: {
     type: String,
     required: true,
@@ -56,6 +75,9 @@ const invoiceSchema = new mongoose.Schema({
   },
 });
 
-const InvoiceSchema = mongoose.model("Invoice", invoiceSchema);
+const InvoiceSchema: Model<IInvoice> = mongoose.model<IInvoice>(
+  "Invoice",
+  invoiceSchema,
+);
 
 export default InvoiceSchema;

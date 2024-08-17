@@ -41,9 +41,6 @@ const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
   const jwtSecret = process.env.SECRET_KEY || "";
   const authHeader = req.headers.authorization;
   const userId = req.headers.userid;
-  console.log("req.headers", req.headers);
-  console.log("authHeader", authHeader);
-  console.log("userId", userId);
   if (authHeader && userId) {
     let token;
     if (authHeader.includes("Bearer ")) {

@@ -1,0 +1,78 @@
+body {
+    background: lightgrey;
+    margin: 0;
+}
+
+.invoice-din-a4 {
+    overflow: hidden;
+    box-sizing: border-box;
+    max-width: 210mm;
+    min-height: 297mm;
+    margin: auto;
+    padding: 30px;
+    font-size: 8pt;
+    line-height: 10pt;
+    font-family: 'Helvetica', Helvetica, Arial, sans-serif;
+    background: white;
+    color: #555;
+    position: relative;
+}
+
+.sender {
+    background: #0c7d9d;
+    height: 50mm;
+    font-size: 8pt;
+    padding-bottom: 3px;
+    position: absolute;
+    left: 15mm;
+    top: 27.528mm;
+    width: 69mm;
+    display: block;
+}
+
+.recepient {
+    background-color: #eee;
+    padding: 2mm;
+    position: absolute;
+    left: 15mm;
+    top: 34mm;
+    width: 65mm;
+    height: 25mm;
+}
+
+.info {
+    background-color: #ccc;
+    padding: 2mm;
+    position: absolute;
+    top: 95mm;
+    left: 15mm;
+}
+
+.subject {
+    position: absolute;
+    left: 15mm;
+    top: 143mm;
+}
+
+.billing-content {
+    position: absolute;
+    left: 15mm;
+    right: 15mm;
+    top: 160mm;
+    max-width: calc(297mm - 30mm);
+}
+
+.billing-content table {
+    background: rgba(0, 0, 0, 0.05);
+    margin-bottom: 4mm;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td {
+    border: 1px solid #fff;
+    padding: 4px;
+}

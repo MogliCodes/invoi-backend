@@ -5,7 +5,7 @@ import { consola } from "consola";
 
 import TemplatesModel from "./TemplatesModel.ts";
 import ContactModel from "../Contact/ContactModel.ts";
-import InvoiceModel from "./InvoiceModel.ts";
+import InvoiceModel, { IInvoice } from "./InvoiceModel.ts";
 import InvoiceDraftModel from "./InvoiceDraftModel.ts";
 
 import ClientModel from "../Client/ClientModel.ts";
@@ -50,7 +50,7 @@ import type {
 } from "../../types.d.ts";
 import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
 
-export default class UserController {
+export default class InvoiceController {
   public sendHttpResponse<T>(res: Response, data: Array<T> | string) {
     if (data && data.length > 0) {
       res.status(200).json({ data: data, status: 200, total: data.length });
@@ -376,38 +376,31 @@ export default class UserController {
     try {
       const currentYear = new Date().getFullYear();
       const searchQuery = `^${currentYear}`;
-      const query = await InvoiceModel.find({ nr: new RegExp(searchQuery) });
-      // TODO: MAKE DYNAMIC
-      const latestInvoice = await InvoiceModel.findOne({
-        nr: { $regex: /^2024-\d+$/ },
-      }) // Match the pattern "YYYY-NNN"
+
+      const latestInvoice: IInvoice | null = await InvoiceModel.findOne({
+        user: req.headers.userid,
+        nr: { $regex: new RegExp(`^${currentYear}-\\d+$`) },
+      })
         .sort({ nr: -1 }) // Sort in descending order based on the numeric value of the suffix
         .limit(1); // Limit the result to one document
 
+      let newInvoiceNumber: string;
       if (!latestInvoice) {
-        res.send(400);
-        return;
-      }
-
-      // Given invoice number
-      const currentInvoiceNumber = latestInvoice.nr;
-
-      // Extract the numeric part
-      const numericPart = parseInt(currentInvoiceNumber.split("-")[1]);
-      // Increment the numeric part
-      const incrementedNumericPart = numericPart + 1;
-
-      // Format the new invoice number
-      const newInvoiceNumber = `2024-${String(incrementedNumericPart).padStart(
-        3,
-        "0",
-      )}`;
-
-      if (!query.length) {
-        res.json({ number: `${currentYear}-001` });
+        consola.info("Could not get latest invoice number");
+        newInvoiceNumber = `${currentYear}-001`;
       } else {
-        res.json(newInvoiceNumber);
+        // Extract the numeric part
+        const currentInvoiceNumber = latestInvoice.nr;
+        const numericPart = parseInt(currentInvoiceNumber.split("-")[1], 10);
+        // Increment the numeric part
+        const incrementedNumericPart = numericPart + 1;
+        // Format the new invoice number
+        newInvoiceNumber = `${currentYear}-${String(
+          incrementedNumericPart,
+        ).padStart(3, "0")}`;
       }
+      console.log(newInvoiceNumber);
+      res.json({ number: newInvoiceNumber });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Error getting new invoice number" });
