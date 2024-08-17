@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import UserModel from "../../domain/User/UserModel.ts";
 import jwt from "jsonwebtoken";
 import { consola } from "consola";
-const jwtSecret = "your-secret-key";
+const jwtSecret = process.env.SECRET_KEY || "";
 
 export default class AuthController {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

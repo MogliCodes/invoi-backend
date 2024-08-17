@@ -11,7 +11,7 @@ import { consola } from "consola";
 export const setupMiddleware = (app: express.Application) => {
   app.use(
     session({
-      secret: "your-secret-key",
+      secret: process.env.SECRET_KEY || "",
       resave: false,
       saveUninitialized: false,
     }),
@@ -38,12 +38,19 @@ export const setupMiddleware = (app: express.Application) => {
 };
 
 const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
-  const jwtSecret = "your-secret-key";
+  const jwtSecret = process.env.SECRET_KEY || "";
   const authHeader = req.headers.authorization;
   const userId = req.headers.userid;
-
+  console.log("req.headers", req.headers);
+  console.log("authHeader", authHeader);
+  console.log("userId", userId);
   if (authHeader && userId) {
-    const token = authHeader;
+    let token;
+    if (authHeader.includes("Bearer ")) {
+      token = authHeader.replace("Bearer ", "");
+    } else {
+      token = authHeader;
+    }
 
     jwt.verify(token, jwtSecret, (err, decoded) => {
       if (err) {
