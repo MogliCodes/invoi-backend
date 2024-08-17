@@ -1,19 +1,20 @@
 # Use an official Node.js runtime as the base image
 FROM node:18
 
-ENV DATABASE_URL=mongodb://127.0.0.1:27017/invoi?retryWrites=false&w=majority
-# Install PNPM globally
-RUN npm install -g pnpm
-
 # Set the working directory in the container
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json to the working directory
-COPY package*.json ./
+# Install pnpm globally
+RUN npm install -g pnpm
+
+# Copy package.json and pnpm-lock.yaml to the working directory
+COPY package.json pnpm-lock.yaml ./
 
 COPY . .
+
 # Install app dependencies using PNPM
 RUN pnpm install && pnpm build
+
 
 # Copy the rest of the application code
 

@@ -252,6 +252,8 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
     });
 
     await page.setContent(html);
+    await page.evaluateHandle("document.fonts.ready");
+
     await page.close();
 
     return html;
@@ -279,6 +281,7 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
     }
 
     await page.setContent(allPagesHtml);
+    await page.evaluateHandle("document.fonts.ready");
     await page.pdf({
       path: path,
       format: "a4",
