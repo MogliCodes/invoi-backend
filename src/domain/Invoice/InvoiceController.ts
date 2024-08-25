@@ -38,6 +38,11 @@ type Invoice = {
   storagePath: string;
 };
 
+type RangeParams = {
+  start: string;
+  end: string;
+};
+
 import type {
   ClientData,
   CustomHeaders,
@@ -407,6 +412,45 @@ export default class InvoiceController {
     }
   }
 
+  public async getNewInvoiceNumberForYear(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    try {
+      const { year } = req.params;
+      const searchQuery = `^${year}`;
+
+      const latestInvoice: IInvoice | null = await InvoiceModel.findOne({
+        user: req.headers.userid,
+        nr: { $regex: new RegExp(`^${year}-\\d+$`) },
+      })
+        .sort({ nr: -1 }) // Sort in descending order based on the numeric value of the suffix
+        .limit(1); // Limit the result to one document
+
+      let newInvoiceNumber: string;
+      if (!latestInvoice) {
+        consola.info("Could not get latest invoice number");
+        newInvoiceNumber = `${year}-001`;
+      } else {
+        // Extract the numeric part
+        const currentInvoiceNumber = latestInvoice.nr;
+        const numericPart = parseInt(currentInvoiceNumber.split("-")[1], 10);
+        // Increment the numeric part
+        const incrementedNumericPart = numericPart + 1;
+        // Format the new invoice number
+        newInvoiceNumber = `${year}-${String(incrementedNumericPart).padStart(
+          3,
+          "0",
+        )}`;
+      }
+      console.log(newInvoiceNumber);
+      res.json({ number: newInvoiceNumber });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Error getting new invoice number" });
+    }
+  }
+
   public async createInvoicePdf(req: Request, res: Response): Promise<void> {
     const invoiceData = req.body;
     const { headers } = req;
@@ -532,8 +576,9 @@ export default class InvoiceController {
 
   public async getRevenueRangeOfCurrentYear(req: Request, res: Response) {
     const { headers, query } = req;
-    console.log(headers.userid);
-    console.log("params", query);
+    const { start, end } = query as RangeParams;
+    const startYear = new Date(start).getFullYear();
+    const startMonth = new Date(start).getMonth();
     const currentYear = new Date().getFullYear();
     const months = [
       "January",
@@ -555,7 +600,7 @@ export default class InvoiceController {
       const invoices = await InvoiceModel.find({
         user: headers.userid,
         date: {
-          $gte: new Date(currentYear, month, 1),
+          $gte: new Date(startYear, startMonth, 1),
           $lt: new Date(currentYear, month + 1, 0),
         },
       });

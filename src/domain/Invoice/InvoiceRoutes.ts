@@ -16,6 +16,7 @@ router.get("/client", invoiceController.getInvoicesByClient);
 router.post("/bulk/delete", invoiceController.bulkDeleteInvoices);
 router.post("/", invoiceController.createInvoice);
 router.post("/pdf", invoiceController.createInvoicePdf);
+router.get("/number/:year", invoiceController.getNewInvoiceNumberForYear);
 router.get("/number", invoiceController.getNewInvoiceNumber);
 router.get(
   "/revenue/range/year",

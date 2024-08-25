@@ -151,7 +151,7 @@ export default class ContactController {
     const options = { upsert: true };
     const updatedContact = req.body;
 
-    const result = ContactModel.updateOne(query, updatedContact, options)
+    await ContactModel.updateOne(query, updatedContact, options)
       .then((result) => {
         const { matchedCount, modifiedCount } = result;
         if (matchedCount && modifiedCount) {
@@ -167,7 +167,7 @@ export default class ContactController {
   public async deleteContact(req: Request, res: Response): Promise<void> {
     try {
       const query = { _id: req.params.id };
-      const result = ContactModel.deleteOne(query).catch((err) =>
+      await ContactModel.deleteOne(query).catch((err) =>
         console.error(`Failed to add review: ${err}`),
       );
       consola.success(`Successfully deleted contact ${req.params.id}`);
@@ -194,7 +194,7 @@ export default class ContactController {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const userid: string = req.headers.userid;
-    console.log("userId", userid);
+    consola.info("Initiation demo data contacts for userId: ", userid);
     try {
       // eslint-disable-next-line no-inner-declarations
       function createRandomContact(userId = "6528f805a3b18735c132f163") {
@@ -206,21 +206,40 @@ export default class ContactController {
           zip: faker.location.zipCode(),
           city: faker.location.city(),
           user: userId,
+          category: "demo",
         };
       }
 
       for (let i = 0; i < 10; i++) {
         const contact = createRandomContact(userid);
-        const res = await ContactModel.create(contact);
-        console.log("res", res);
+        const res: IContact = await ContactModel.create(contact);
+        consola.info("res", res);
       }
-
       res.status(200).json({
         status: 200,
         message: `Successfully delete created demo contacts`,
       });
     } catch (error) {
-      console.error("error", error);
+      consola.error("error", error);
+    }
+  }
+
+  public async deleteDemoContacts(req: Request, res: Response): Promise<void> {
+    try {
+      const { headers } = req;
+      consola.log("Deleting demo contacts for user: ", headers?.userid);
+      const result = await ContactModel.deleteMany({
+        user: headers?.userid,
+        category: "demo",
+      });
+      consola.log("result", result);
+      res.status(200).json({
+        status: 200,
+        message: `Successfully delete  ${result.deletedCount} demo contacts`,
+      });
+    } catch (error) {
+      consola.error("error", error);
+      res.status(500).json({ message: "Error deleting demo contacts" });
     }
   }
 }

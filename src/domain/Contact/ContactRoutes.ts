@@ -19,6 +19,7 @@ router.post("/", validateContact, contactController.createContact);
 router.patch("/:id", validateContact, contactController.patchContact);
 
 // Delete data
+router.delete("/demo", contactController.deleteDemoContacts);
 router.delete("/:id", contactController.deleteContact);
 
 export default router;

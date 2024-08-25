@@ -20,7 +20,7 @@ import StorageController from "./domain/Storage/StorageController.ts";
 loadEnv();
 
 const app: Application = express();
-const port = process.env.PORT || 8001;
+const port = process.env.PORT || 8000;
 const dbUrl = process.env.DATABASE_URL || "";
 
 const storageController = new StorageController();

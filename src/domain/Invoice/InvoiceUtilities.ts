@@ -40,10 +40,10 @@ export function transformInvoiceData(data: InvoiceData): InvoiceData {
   transformedData.date = new Date(data.date).toLocaleDateString("de-DE");
   transformedData.performancePeriodStart = new Date(
     data.performancePeriodStart,
-  ).toLocaleDateString();
+  ).toLocaleDateString("de-DE");
   transformedData.performancePeriodEnd = new Date(
     data.performancePeriodEnd,
-  ).toLocaleDateString();
+  ).toLocaleDateString("de-DE");
   // Format numbers in items array
   transformedData.items = transformedData.items?.map((item) => ({
     ...item,
@@ -162,7 +162,7 @@ export function generateFileName(
   clientData: ClientData,
   invoiceData: InvoiceData,
 ) {
-  return `invoices/&${invoiceData.nr}_${clientData.company.replace(
+  return `invoices/${invoiceData.nr}_${clientData.company.replace(
     / /g,
     "-",
   )}_${invoiceData.title.replace(/ /g, "-")}.pdf`;
