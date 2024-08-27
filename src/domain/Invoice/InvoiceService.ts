@@ -48,6 +48,7 @@ type ClientData = {
   street: string;
   zip: string;
   city: string;
+  taxId: string;
 };
 
 export interface FetchDataForInvoiceCreationResponse {
@@ -211,6 +212,7 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
     const html = template({
       company: client.company,
       street: client.street,
+      taxId: client.taxId,
       zip: client.zip,
       city: client.city,
       nr: invoiceData.nr,
