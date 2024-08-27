@@ -25,6 +25,7 @@ router.get(
 router.get("/revenue/quarter", invoiceController.getRevenueOfCurrentQuarter);
 router.get("/revenue/year", invoiceController.getRevenueOfCurrentYear);
 router.get("/revenue/month", invoiceController.getRevenueOfCurrentMonth);
+router.get("/revenue/:clientId", invoiceController.getRevenueByClient);
 router.get("/tax/month", invoiceController.getTaxOfCurrentMonth);
 router.get("/tax/year", invoiceController.getTaxOfCurrentYear);
 router.get("/tax/quarter", invoiceController.getTaxOfCurrentQuarter);

@@ -617,6 +617,23 @@ export default class InvoiceController {
     res.status(200).json(monthlyRevenues);
   }
 
+  public async getRevenueByClient(req: Request, res: Response): Promise<void> {
+    const { headers } = req;
+    const { clientId } = req.params;
+    const invoices = await InvoiceModel.find({
+      user: headers.userid,
+      client: clientId,
+    });
+
+    // Accumulate the total of all invoices
+    const total = invoices.reduce(
+      (acc, invoice) => acc + parseInt(invoice?.total || ""),
+      0,
+    );
+
+    res.status(200).json(total);
+  }
+
   public async getTaxOfCurrentMonth(
     req: Request,
     res: Response,
