@@ -74,7 +74,7 @@ export default class ClientController {
       .catch((err) => console.error(`Failed to add review: ${err}`));
     res
       .status(200)
-      .json({ status: 200, message: "Successfully patched contact" });
+      .json({ status: 200, message: "Kundendaten erfolgreich angepasst." });
   }
 
   public async deleteClientById(req: Request, res: Response): Promise<void> {
