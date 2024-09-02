@@ -14,7 +14,11 @@ export default class SettingsController {
       user: headers.userid,
     };
     const createdSettings = await SettingsModel.create(settings);
-    res.status(201).json({ message: "createSettings", data: createdSettings });
+    res.status(201).json({
+      message: "Voreinstellungen wurden erfolgreich erstellt.",
+      data: createdSettings,
+      status: 201,
+    });
   }
 
   public async updateSettings(req: Request, res: Response): Promise<void> {
