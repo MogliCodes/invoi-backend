@@ -163,10 +163,12 @@ export function generateFileName(
   invoiceData: InvoiceData,
 ) {
   const unsafeCharacters = /[\s\/\\:*?"<>|]/g;
-  return `invoices/${invoiceData.nr}_${clientData.company.replace(
-    / /g,
+  return `invoices/${invoiceData.nr.slice(0, 4)}/${
+    invoiceData.nr
+  }_${clientData.company.replace(/ /g, "-")}_${invoiceData.title.replace(
+    unsafeCharacters,
     "-",
-  )}_${invoiceData.title.replace(unsafeCharacters, "-")}.pdf`;
+  )}.pdf`;
 }
 
 export function formatTextToCSV(text: string): string {
