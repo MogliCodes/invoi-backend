@@ -31,7 +31,9 @@ connectDB(dbUrl);
 setupMiddleware(app);
 setupSwagger(app);
 
-const browser = await chromium.launch();
+const browser = await chromium.launch({
+  executablePath: process.env.CHROMIUM_PATH,
+});
 if (browser) {
   consola.success("Playwright browser launched");
 } else {

@@ -242,6 +242,11 @@ export default class InvoiceController {
         console.error(error);
       }
       if (!minioClient) return;
+      const exists = await minioClient.bucketExists(bucketName);
+      if (!exists) {
+        await minioClient.makeBucket(bucketName);
+      }
+
       await minioClient.putObject(bucketName, fileName, pdfBuffer);
       consola.success(`Successfully uploaded invoice to MinIO: ${fileName}`);
     } catch (error) {

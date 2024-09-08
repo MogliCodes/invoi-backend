@@ -84,7 +84,9 @@ export default class InvoiceService {
     );
 
     // Create a browser instance
-    const browser = await chromium.launch();
+    const browser = await chromium.launch({
+      executablePath: process.env.CHROMIUM_PATH,
+    });
 
     let allPagesHtml = "";
 
@@ -267,7 +269,9 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
     clientData: ClientData,
     invoiceData: InvoiceData,
   ): Promise<string> {
-    const browser = await chromium.launch();
+    const browser = await chromium.launch({
+      executablePath: process.env.CHROMIUM_PATH,
+    });
     const page = await browser.newPage();
     const fileName = generateFileName(clientData, invoiceData);
     const year = fileName.slice(0, 4);
@@ -294,7 +298,9 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
   }
 
   static async generatePdfBuffer(allPagesHtml: string): Promise<Buffer> {
-    const browser = await chromium.launch();
+    const browser = await chromium.launch({
+      executablePath: process.env.CHROMIUM_PATH,
+    });
     const page = await browser.newPage();
     await page.setContent(allPagesHtml);
     const pdfBuffer: Buffer = await page.pdf({
