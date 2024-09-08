@@ -4,9 +4,6 @@ import { Request, Response, NextFunction } from "express";
 const contactValidationChain: ValidationChain[] = [
   body("firstname").isString().notEmpty(),
   body("lastname").isString().notEmpty(),
-  body("street").isString().notEmpty(),
-  body("zip").isString().notEmpty(),
-  body("city").isString().notEmpty(),
 ];
 
 export const validateContact = (

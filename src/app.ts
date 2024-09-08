@@ -32,7 +32,7 @@ setupMiddleware(app);
 setupSwagger(app);
 
 const browser = await chromium.launch({
-  executablePath: process.env.CHROMIUM_PATH,
+  executablePath: process.env.CHROMIUM_PATH || undefined,
 });
 if (browser) {
   consola.success("Playwright browser launched");
