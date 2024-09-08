@@ -16,6 +16,7 @@ import storageRouter from "./domain/Storage/StorageRoutes.ts";
 import servicesRouter from "./domain/Services/ServicesRoutes.ts";
 import timeRecordsRoutes from "./domain/TimeRecords/TimeRecordsRoutes.ts";
 import StorageController from "./domain/Storage/StorageController.ts";
+import { Browser, chromium } from "playwright";
 
 loadEnv();
 
@@ -29,6 +30,13 @@ storageController.getStorageInfo();
 connectDB(dbUrl);
 setupMiddleware(app);
 setupSwagger(app);
+
+const browser = await chromium.launch();
+if (browser) {
+  consola.success("Playwright browser launched");
+} else {
+  consola.error("Error launching playwright browser");
+}
 
 // Register routes
 app.use("/restapi/auth", authRouter);
