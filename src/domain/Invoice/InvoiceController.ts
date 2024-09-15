@@ -727,7 +727,7 @@ export default class InvoiceController {
       .catch((err) => console.error(`Failed to add review: ${err}`));
     res
       .status(200)
-      .json({ status: 200, message: "Successfully patched invoice" });
+      .json({ status: 200, message: "Rechnung wurde als 'bezahlt' markiert." });
   }
 
   public async uploadCustomTemplates(
