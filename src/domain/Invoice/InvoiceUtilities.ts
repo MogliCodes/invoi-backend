@@ -36,14 +36,22 @@ type ClientData = {
 
 export function transformInvoiceData(data: InvoiceData): InvoiceData {
   const transformedData = { ...data };
+  const dateOptions = {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  } as const;
   transformedData.items = JSON.parse(data.items.toString());
-  transformedData.date = new Date(data.date).toLocaleDateString("de-DE");
+  transformedData.date = new Date(data.date).toLocaleDateString(
+    "de-DE",
+    dateOptions,
+  );
   transformedData.performancePeriodStart = new Date(
     data.performancePeriodStart,
-  ).toLocaleDateString("de-DE");
+  ).toLocaleDateString("de-DE", dateOptions);
   transformedData.performancePeriodEnd = new Date(
     data.performancePeriodEnd,
-  ).toLocaleDateString("de-DE");
+  ).toLocaleDateString("de-DE", dateOptions);
   // Format numbers in items array
   transformedData.items = transformedData.items?.map((item) => ({
     ...item,
