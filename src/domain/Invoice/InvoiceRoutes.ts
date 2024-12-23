@@ -31,13 +31,21 @@ router.get("/tax/year", invoiceController.getTaxOfCurrentYear);
 router.get("/tax/quarter", invoiceController.getTaxOfCurrentQuarter);
 router.get("/templates", invoiceController.getCustomTemplates);
 router.get("/templates/:id", invoiceController.getTemplateById);
+router.get("/templates/:id/html", invoiceController.getTemplateHtml);
 router.get("/categories", (req, res) => res.status(200).json([]));
 router.get("/template", (req, res) => res.status(200).json([]));
+
+router.get(
+  "/template/default/preview",
+  invoiceController.getDefaultTemplatePreview,
+);
+
 router.get("/:id", invoiceController.getInvoiceById);
 router.post(
   "/templates/upload",
   logRequest,
   upload.single("templateFirstPage"),
+  invoiceController.uploadCustomTemplates,
   invoiceController.uploadCustomTemplates,
 );
 router.post("/template", invoiceController.uploadCustomTemplate);

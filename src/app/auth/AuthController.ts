@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import UserModel from "../../domain/User/UserModel.ts";
 import jwt from "jsonwebtoken";
 import { consola } from "consola";
+import SettingsModel from "../../domain/Settings/SettingsModel.js";
 const jwtSecret = process.env.SECRET_KEY || "";
 
 export default class AuthController {
@@ -37,7 +38,18 @@ export default class AuthController {
           email,
           password: encryptedPassword,
         });
-        res.status(201).json({ newUser });
+        consola.success(`User ${username} created successfully`);
+        const settings = await SettingsModel.create({
+          user: newUser.id,
+          username: newUser.username,
+          email: newUser.email,
+        });
+        consola.success(`Settings for ${username} created successfully`);
+        res.status(201).json({
+          message: "Erfolgreich registriert",
+          status: 201,
+          data: { newUser, settings },
+        });
       }
     } catch (error) {
       console.error(error);

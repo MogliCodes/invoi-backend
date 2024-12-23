@@ -7,10 +7,18 @@ export function logger(req: Request, res: Response, next: NextFunction) {
 
   // Flag to indicate if additional logging is required
   const logRequestBody = req.originalUrl.includes("invoice");
+  const logMethod = req.method !== "GET";
 
   // Log request details
   if (logRequestBody) {
-    consola.info(`Request Body: ${JSON.stringify(req.body)}`);
+    consola.info(
+      `${new Date().toISOString()} ${req.method} ${
+        req.originalUrl
+      } ${JSON.stringify(req.params)} ${JSON.stringify(req.query)}`,
+    );
+    if (logMethod) {
+      consola.info(`Body: ${JSON.stringify(req.body)}`);
+    }
   }
 
   res.on("finish", () => {

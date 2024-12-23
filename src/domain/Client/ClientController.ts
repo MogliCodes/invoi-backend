@@ -56,7 +56,7 @@ export default class ClientController {
     console.log("client", client);
     res
       .status(201)
-      .json({ status: 201, message: "Successfully created client" });
+      .json({ status: 201, message: "Kunde erfolgreich angelegt" });
   }
 
   public async editClientById(req: Request, res: Response): Promise<void> {

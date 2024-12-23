@@ -17,8 +17,10 @@ import {
 import { consola } from "consola";
 import fs from "fs";
 import ClientModel, { IClient } from "../Client/ClientModel.ts";
-import SettingsModel, { ISettings } from "../Settings/SettingsModel.js";
-import ContactModel, { IContact } from "../Contact/ContactModel.js";
+import SettingsModel, { ISettings } from "../Settings/SettingsModel.ts";
+import ContactModel, { IContact } from "../Contact/ContactModel.ts";
+import TemplatesModel, { ITemplate } from "./TemplatesModel.ts";
+import StorageController from "../Storage/StorageController.ts";
 
 type InvoicePosition = {
   position: number;
@@ -53,9 +55,11 @@ type ClientData = {
 
 export interface FetchDataForInvoiceCreationResponse {
   data: {
-    clientData: IClient | null;
+    clientData: IClient;
     settingsData: ISettings | null;
     contactData: IContact | null;
+    customTemplates?: Array<ITemplate>;
+    customTemplatesHtml?: Array<string>;
   } | null;
   status: number;
   message: string;
@@ -64,9 +68,10 @@ export interface FetchDataForInvoiceCreationResponse {
 export default class InvoiceService {
   static async createPdf(
     invoiceData: InvoiceData,
-    clientData: ClientData | any,
-    settingsData: any,
-    contactData: any,
+    clientData: IClient,
+    settingsData: ISettings,
+    contactData: IContact | boolean,
+    customTemplates?: Array<ITemplate>,
   ): Promise<Buffer> {
     const maxCharsPerPage = 900;
     let currentPageChars = 0;
@@ -78,7 +83,8 @@ export default class InvoiceService {
       transformedInvoiceData.items,
       maxCharsPerPage,
     );
-    console.info("createPdf", contactData);
+    consola.info("Has custom templates: ", !!customTemplates);
+    consola.info("Has contact data: ", !!contactData);
     consola.info(
       isReverseChargeInvoice ? "Reverse charged invoice" : "Standard invoice",
     );
@@ -117,6 +123,7 @@ export default class InvoiceService {
           clientData,
           settingsData,
           contactData ? contactData : false,
+          customTemplates,
         );
         allPagesHtml += pageHtml;
 
@@ -140,6 +147,7 @@ export default class InvoiceService {
       clientData,
       settingsData,
       contactData,
+      customTemplates,
     );
     allPagesHtml += lastPageHtml;
 
@@ -156,18 +164,35 @@ export default class InvoiceService {
     browser: Browser,
     numberOfPages: number,
     subtotal: number = 0,
-    client: ClientData,
-    settingsData: any,
-    contactData: any,
+    client: IClient,
+    settingsData: ISettings,
+    contactData: IContact | boolean,
+    customTemplates: Array<ITemplate> = [],
   ): Promise<string> {
     const page = await browser.newPage();
     const isLastPage = currentPageIndex === numberOfPages;
     const isSinglePage = numberOfPages === 1;
-    const invoiceSenderInfoTemplate = await getInvoiceSenderInfoTemplate();
+    const invoiceSenderInfoTemplate = getInvoiceSenderInfoTemplate();
+
+    console.log("customTemplates", customTemplates);
+
+    if (customTemplates.length > 1) {
+      console.log("More than one custom template");
+    }
+
+    if (customTemplates.length === 1) {
+      consola.info(
+        "Exactly one custom template: " + customTemplates[0].fileName,
+      );
+    }
+
+    if (!customTemplates.length) {
+      console.log("No custom templates");
+    }
 
     handlebars.registerPartial(
       "invoiceSenderInfo",
-      <Handlebars.TemplateDelegate<any> | string>invoiceSenderInfoTemplate,
+      <Handlebars.TemplateDelegate | string>invoiceSenderInfoTemplate,
     );
 
     const template =
@@ -198,8 +223,8 @@ export default class InvoiceService {
     const additionalTextReverseCharge = `Die Steuerschuld geht auf den Leistungsempfänger über. Bitte überweisen Sie den Rechnungsbetrag innerhalb von 14 Tagen nach Erhalt
 dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zusammenarbeit.`;
 
-    function getContactName(contactData: any): string | boolean {
-      if (contactData) {
+    function getContactName(contactData: IContact | boolean): string | boolean {
+      if (contactData && typeof contactData !== "boolean") {
         return `${contactData.firstname} ${contactData.lastname}`;
       }
       return false;
@@ -362,11 +387,64 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
       consola.info("Invoice without contact");
     }
 
+    /* ===================================
+    // Fetch custom templates information
+    =================================== */
+    const customTemplates = await TemplatesModel.find({
+      user: userId,
+    });
+    if (!customTemplates) {
+      return {
+        data: {
+          clientData,
+          settingsData,
+          contactData,
+        },
+        status: 200,
+        message: "Data retrieved successfully",
+      };
+    } else {
+      consola.success("Successfully fetched custom templates information:");
+      consola.box(customTemplates);
+    }
+
+    /* ===================================
+    // Fetch custom templates HTML
+    =================================== */
+    const minioClient = await StorageController.createStorageClient();
+    const customTemplatesHtml: Array<string> = [];
+    if (!!customTemplates.length && minioClient) {
+      for (const template of customTemplates) {
+        const dataStream = await minioClient.getObject(
+          userId,
+          "templates/" + template.fileName,
+        );
+        let templateData = "";
+
+        dataStream.on("data", (chunk) => {
+          templateData += chunk.toString();
+        });
+
+        dataStream.on("end", () => {
+          customTemplatesHtml.push(templateData);
+          consola.success(
+            `Successfully fetched template data for: ${template.fileName}`,
+          );
+        });
+
+        dataStream.on("error", (err) => {
+          consola.error(`Error while reading the object: ${err}`);
+        });
+      }
+    }
+
     return {
       data: {
         clientData,
         settingsData,
         contactData,
+        customTemplates,
+        customTemplatesHtml,
       },
       status: 200,
       message: "Data retrieved successfully",

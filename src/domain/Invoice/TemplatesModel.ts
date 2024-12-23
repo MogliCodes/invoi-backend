@@ -1,6 +1,15 @@
-import mongoose from "mongoose";
+import mongoose, { Model, Schema } from "mongoose";
 
-const templatesModel = new mongoose.Schema({
+export interface ITemplate extends Document {
+  title: string;
+  name: string;
+  tags: string;
+  fileName: string;
+  user?: string;
+  etag?: string;
+}
+
+const templatesModel: Schema<ITemplate> = new mongoose.Schema({
   title: {
     type: String,
     required: true,
@@ -18,13 +27,18 @@ const templatesModel = new mongoose.Schema({
     required: true,
   },
   user: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
   },
   etag: {
     type: String,
   },
 });
 
-const TemplatesSchema = mongoose.model("Templates", templatesModel);
+const TemplatesSchema: Model<ITemplate> = mongoose.model<ITemplate>(
+  "Templates",
+  templatesModel,
+);
 
 export default TemplatesSchema;

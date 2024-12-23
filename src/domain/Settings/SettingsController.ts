@@ -29,9 +29,11 @@ export default class SettingsController {
         req.body,
         { new: true },
       );
-      res
-        .status(201)
-        .json({ status: 201, message: "updateSettings", data: settings });
+      res.status(201).json({
+        status: 201,
+        message: "Einstellungen erfolgreich angepasst",
+        data: settings,
+      });
     } catch (error: unknown) {
       consola.error("Error while updating settings");
       // @ts-ignore

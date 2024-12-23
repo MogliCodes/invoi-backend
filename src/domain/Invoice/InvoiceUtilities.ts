@@ -63,10 +63,28 @@ export function transformInvoiceData(data: InvoiceData): InvoiceData {
   return transformedData;
 }
 
+export function getInvoiceSenderInfoTemplate(): string {
+  consola.info("template-invoice-sender-info.html used!");
+  const objectName = "template-invoice-sender-info.html";
+  return fs.readFileSync(
+    `${__dirname}/../../assets/templates/partials/${objectName}`,
+    "utf8",
+  );
+}
+
 export async function getDefaultTemplate() {
-  const objectName = "template-single.html";
-  consola.info(`${objectName} used`);
-  return getTemplateFromStorage(objectName);
+  const objectName = "default-single-page.html";
+  fs.existsSync(`${__dirname}/../../assets/templates/${objectName}`);
+
+  if (fs.existsSync(`${__dirname}/../../assets/templates/${objectName}`)) {
+    consola.info("default-single-page.html used");
+    return fs.readFileSync(
+      `${__dirname}/../../assets/templates/${objectName}`,
+      "utf8",
+    );
+  }
+
+  // return getTemplateFromStorage(objectName);
 }
 
 async function getTemplateFromStorage(objectName: string): Promise<unknown> {
@@ -104,12 +122,6 @@ export function getSubsequentPagesTemplate() {
 export function getLastPageTemplate() {
   consola.info("template-last-page.html used");
   const objectName = "template-last-page.html";
-  return getTemplateFromStorage(objectName);
-}
-
-export function getInvoiceSenderInfoTemplate(): Promise<unknown> {
-  consola.info("template-invoice-sender-info.html used");
-  const objectName = "partials/template-invoice-sender-info.html";
   return getTemplateFromStorage(objectName);
 }
 

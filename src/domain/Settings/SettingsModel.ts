@@ -7,6 +7,8 @@ export interface ISettings extends Document {
   email: string;
   firstname?: string;
   lastname?: string;
+  company?: string;
+  companyEmail?: string;
   street: string;
   zipCode: string;
   city: string;
@@ -47,17 +49,20 @@ const settingsSchema: Schema<ISettings> = new Schema({
   lastname: {
     type: String,
   },
+  company: {
+    type: String,
+  },
+  companyEmail: {
+    type: String,
+  },
   street: {
     type: String,
-    required: true,
   },
   zipCode: {
     type: String,
-    required: true,
   },
   city: {
     type: String,
-    required: true,
   },
   phone: {
     type: String,
@@ -70,23 +75,18 @@ const settingsSchema: Schema<ISettings> = new Schema({
   },
   bankName: {
     type: String,
-    required: true,
   },
   iban: {
     type: String,
-    required: true,
   },
   bic: {
     type: String,
-    required: true,
   },
   currency: {
     type: String,
-    required: true,
   },
   language: {
     type: String,
-    required: true,
   },
   invoiceNumberSchema: {
     type: String,

@@ -8,8 +8,8 @@ import ContactModel from "../Contact/ContactModel.ts";
 import InvoiceModel, { IInvoice } from "./InvoiceModel.ts";
 import InvoiceDraftModel from "./InvoiceDraftModel.ts";
 
-import ClientModel from "../Client/ClientModel.ts";
-import SettingsModel from "../Settings/SettingsModel.ts";
+import ClientModel, { IClient } from "../Client/ClientModel.ts";
+import SettingsModel, { ISettings } from "../Settings/SettingsModel.ts";
 import InvoiceService, {
   FetchDataForInvoiceCreationResponse,
 } from "./InvoiceService.ts";
@@ -17,6 +17,8 @@ import StorageController from "../Storage/StorageController.ts";
 import {
   formatTextToCSV,
   generateFileName,
+  getDefaultTemplate,
+  getInvoiceSenderInfoTemplate,
   isInvoiceDue,
 } from "./InvoiceUtilities.ts";
 
@@ -54,6 +56,7 @@ import type {
   ResponseData,
 } from "../../types.d.ts";
 import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
+import handlebars from "handlebars";
 
 export default class InvoiceController {
   public sendHttpResponse<T>(res: Response, data: Array<T> | string) {
@@ -81,6 +84,7 @@ export default class InvoiceController {
     req: Request<RequestParams, ResponseData, RequestBody, QueryParams>,
     res: Response,
   ): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const { page, pageSize, client } = req.query;
     const { headers } = req;
@@ -197,7 +201,7 @@ export default class InvoiceController {
    */
   public async createInvoice(req: Request, res: Response): Promise<void> {
     const invoiceData = req.body;
-    const headers = req.headers as CustomHeaders;
+    const headers = req.headers as unknown as CustomHeaders;
 
     const userId: string = headers.userid || "";
     const clientId: string = invoiceData.client || "";
@@ -211,7 +215,11 @@ export default class InvoiceController {
         contactId,
       );
 
-    if (!invoiceDataForInvoiceCreation || !invoiceDataForInvoiceCreation.data) {
+    if (
+      !invoiceDataForInvoiceCreation ||
+      !invoiceDataForInvoiceCreation.data ||
+      !invoiceDataForInvoiceCreation.data.settingsData
+    ) {
       consola.error("Error getting client and settings data");
       res.status(500).json({ error: "Error getting client and settings data" });
       return;
@@ -220,14 +228,20 @@ export default class InvoiceController {
       "Successfully fetched data for invoice creation. Now creating PDF...",
     );
 
-    const { clientData, settingsData, contactData } =
-      invoiceDataForInvoiceCreation.data;
+    const {
+      clientData,
+      settingsData,
+      contactData,
+      customTemplates,
+      customTemplatesHtml,
+    } = invoiceDataForInvoiceCreation.data;
 
     const pdfBuffer: Buffer = await InvoiceService.createPdf(
       invoiceData,
       clientData,
       settingsData,
-      contactData,
+      contactData ? contactData : false,
+      customTemplates,
     );
     consola.success("Successfully created PDF. Now uploading to MinIO...");
 
@@ -385,7 +399,6 @@ export default class InvoiceController {
   public async getNewInvoiceNumber(req: Request, res: Response): Promise<void> {
     try {
       const currentYear = new Date().getFullYear();
-      const searchQuery = `^${currentYear}`;
 
       const latestInvoice: IInvoice | null = await InvoiceModel.findOne({
         user: req.headers.userid,
@@ -423,7 +436,6 @@ export default class InvoiceController {
   ): Promise<void> {
     try {
       const { year } = req.params;
-      const searchQuery = `^${year}`;
 
       const latestInvoice: IInvoice | null = await InvoiceModel.findOne({
         user: req.headers.userid,
@@ -460,14 +472,18 @@ export default class InvoiceController {
     const invoiceData = req.body;
     const { headers } = req;
     console.log("invoiceData", invoiceData.client);
-    const clientData = await ClientModel.findOne({
+    const clientData: IClient | null = await ClientModel.findOne({
       user: headers?.userid,
       _id: invoiceData.client,
     });
-
-    const settingsData = await SettingsModel.findOne({
+    const settingsData: ISettings | null = await SettingsModel.findOne({
       user: headers?.userid,
     });
+
+    if (!settingsData || !clientData) {
+      res.status(500).json({ error: "Error getting client and settings data" });
+      return;
+    }
 
     let contactData;
     if (invoiceData.contact) {
@@ -475,6 +491,11 @@ export default class InvoiceController {
         user: headers?.userid,
         _id: invoiceData.contact,
       });
+    }
+
+    if (!contactData) {
+      res.status(500).json({ error: "Error getting contact data" });
+      return;
     }
 
     await InvoiceService.createPdf(
@@ -581,7 +602,7 @@ export default class InvoiceController {
 
   public async getRevenueRangeOfCurrentYear(req: Request, res: Response) {
     const { headers, query } = req;
-    const { start, end } = query as RangeParams;
+    const { start } = query as RangeParams;
     const startYear = new Date(start).getFullYear();
     const startMonth = new Date(start).getMonth();
     const currentYear = new Date().getFullYear();
@@ -659,7 +680,7 @@ export default class InvoiceController {
       (acc, invoice) => acc + parseInt(invoice?.taxes || ""),
       0,
     );
-    console.log("total", total);
+    consola.info("Taxes of current month: ", total);
     res.status(200).json(total);
   }
 
@@ -737,25 +758,41 @@ export default class InvoiceController {
     if (req.file && req.file?.buffer) {
       const { headers } = req;
       const { templatename, templatetags } = headers;
-      const userId = req.params.userId; // Assumes userId is in URL parameters
-      const invoiceName = req.body.invoiceName; // Assumes invoiceName is in the request body
-      const bucketName = userId;
+      const userId = headers.userid as string; // Assumes userId is in URL parameters
+      console.log("USER ID", userId);
+      if (!userId) {
+        consola.error("User ID not provided");
+        res.status(400).json({ message: "User ID not provided", status: 400 });
+        return;
+      }
+
+      const bucketName: string = userId;
       const fileName = req.file.originalname; // Original name of the uploaded file
-      const filePath = `/${userId}/invoices/${invoiceName}`; // Construct the path
+      const filePath = `templates/${fileName}`; // Construct the path
       let uploadedObjectInfo;
       try {
         const minioClient = await StorageController.createStorageClient();
         if (!minioClient) {
           const error = new Error("Failed to create MinIO client");
           console.error(error);
+          return;
         }
-        if (!minioClient) return;
+
+        const bucketExists = await minioClient.bucketExists(bucketName);
+
+        if (!bucketExists) {
+          await minioClient.makeBucket(bucketName);
+        }
+
         uploadedObjectInfo = await minioClient.putObject(
           bucketName,
           filePath,
           req.file.buffer, // Use the buffer from the uploaded file
         );
-        consola.success(`Uploaded invoice to MinIO: ${fileName}`);
+
+        consola.success(
+          `Uploaded template ${fileName} to MinIO bucket: ${bucketName}`,
+        );
         res
           .status(200)
           .json({ status: 200, message: "Successfully uploaded template" });
@@ -783,9 +820,7 @@ export default class InvoiceController {
   public async getCustomTemplates(req: Request, res: Response): Promise<void> {
     try {
       const templates = await TemplatesModel.find({ user: req.headers.userid });
-      setTimeout(() => {
-        res.status(200).json(templates);
-      }, 4000);
+      res.status(200).json(templates);
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Error getting templates" });
@@ -796,6 +831,49 @@ export default class InvoiceController {
     const { id } = req.params;
     const template = await TemplatesModel.findById(id);
     res.status(200).json(template);
+  }
+
+  public async getTemplateHtml(req: Request, res: Response): Promise<void> {
+    const { id } = req.params;
+    const { headers } = req;
+    const userId: string = (headers.userid as string) || "";
+
+    if (!userId) {
+      res.status(400).json({ message: "User ID not provided", status: 400 });
+      return;
+    }
+
+    const template = await TemplatesModel.findById(id);
+
+    if (!template) {
+      res.status(404).json({ message: "Template not found", status: 404 });
+      return;
+    }
+
+    const minioClient = await StorageController.createStorageClient();
+    if (!minioClient) {
+      const error = new Error("Failed to create MinIO client");
+      console.error(error);
+      res.status(500).json({ error: "Failed to create MinIO client" });
+      return;
+    }
+
+    const objectPath = `templates/${template.fileName}`;
+    const dataStream = await minioClient.getObject(userId, objectPath);
+
+    let templateData = "";
+
+    dataStream.on("data", (chunk) => {
+      templateData += chunk.toString();
+    });
+
+    dataStream.on("end", () => {
+      res.status(200).json({ templateData });
+    });
+
+    dataStream.on("error", (err) => {
+      res.status(500).json({ error: `Error while reading the object: ${err}` });
+    });
   }
 
   public async deleteCustomTemplate(
@@ -816,17 +894,16 @@ export default class InvoiceController {
 
   public async createInvoiceDraft(req: Request, res: Response): Promise<void> {
     const invoiceDraftData = req.body;
-    const headers = req.headers as CustomHeaders;
     try {
       const invoiceDraft = await InvoiceDraftModel.create(invoiceDraftData);
       res.status(201).json({
         status: 201,
-        message: "Successfully created invoice draft",
+        message: "Vorlage erfolgreich erstellt",
         invoiceDraft,
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Error creating invoice draft" });
+      res.status(500).json({ error: "Fehler beim erstellen der Vorlage" });
     }
   }
 
@@ -857,5 +934,78 @@ export default class InvoiceController {
 
     console.log("invoices", invoices);
     res.json({ data: invoices });
+  }
+
+  public async getDefaultTemplatePreview(req: Request, res: Response) {
+    const headers = req.headers as unknown as CustomHeaders;
+
+    const userId: string = headers.userid || "";
+
+    const settingsData: ISettings | null = await SettingsModel.findOne({
+      user: userId,
+    });
+    if (!settingsData) {
+      return { data: null, status: 404, message: "Settings not found" };
+    }
+
+    const exampleData = {
+      company: "Example Company",
+      street: "123 Example St",
+      taxId: "DE123456789",
+      zip: "12345",
+      city: "Example City",
+      nr: "INV-2024-001",
+      contact: "John Doe",
+      title: "Invoice for Services",
+      date: "2024-09-20",
+      performancePeriodStart: "2024-08-01",
+      performancePeriodEnd: "2024-08-31",
+      items: [
+        {
+          position: 1,
+          description: "Web development services",
+          hours: "€1,500.00",
+          total: "€1,500.00",
+          factor: 1,
+        },
+        {
+          position: 2,
+          description: "Design consultation",
+          hours: "€300.00",
+          total: "€300.00",
+          factor: 1,
+        },
+      ],
+      currentPage: 1,
+      pageCount: 1,
+      total: "€1,800.00",
+      taxes: "€342.00",
+      totalWithTaxes: "€2,142.00",
+      subtotal: "€1,800.00",
+
+      userFullName: settingsData.firstname + " " + settingsData.lastname,
+      additionalText:
+        settingsData?.additionalTextForEndOfInvoices ||
+        "Default additional text",
+      companyName: settingsData?.company || "Default company",
+      userStreet: settingsData?.street || "Default street",
+      userZip: settingsData?.zipCode || "Default zip",
+      userCity: settingsData?.city || "Default city",
+      userPhone: settingsData?.phone || "Default phone",
+      userEmail: settingsData?.email || "Default email",
+      userTaxId: settingsData?.taxId || "Default taxId",
+      userVatId: settingsData?.vatId || "Default vatId",
+      userBankName: settingsData?.bankName || "Default bankName",
+      userIban: settingsData?.iban || "Default iban",
+      userBic: settingsData?.bic || "Default bic",
+    };
+    const invoiceSenderInfoTemplate = getInvoiceSenderInfoTemplate();
+    handlebars.registerPartial(
+      "invoiceSenderInfo",
+      <Handlebars.TemplateDelegate | string>invoiceSenderInfoTemplate,
+    );
+    const compiledTemplate = handlebars.compile(await getDefaultTemplate());
+    console.log("compiledTemplate", compiledTemplate);
+    res.send(compiledTemplate(exampleData));
   }
 }
