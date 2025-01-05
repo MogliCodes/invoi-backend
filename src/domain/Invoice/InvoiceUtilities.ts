@@ -119,6 +119,7 @@ async function getTemplateFromStorage(objectName: string): Promise<unknown> {
       });
 
       dataStream.on("end", () => {
+        console.info(`FETCHED ${objectName} used`);
         resolve(templateData);
       });
 
