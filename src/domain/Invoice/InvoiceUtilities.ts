@@ -110,6 +110,8 @@ async function getTemplateFromStorage(objectName: string): Promise<unknown> {
   try {
     const minioClient = await StorageController.createStorageClient();
     if (!minioClient) return;
+    console.log("minioClient created");
+    console.log("objectName", objectName);
     const dataStream = await minioClient.getObject("templates", objectName);
     let templateData = "";
 
