@@ -354,6 +354,7 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
       userIban: settingsData.iban,
       userBic: settingsData.bic,
       userTaxId: settingsData.taxId,
+      userVatId: settingsData.vatId,
     });
 
     await page.setContent(html);
