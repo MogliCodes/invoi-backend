@@ -11,6 +11,7 @@ import {
   getDefaultTemplate,
   getInvoiceSenderInfoTemplate,
   getLastPageTemplate,
+  getSenderPartialTemplate,
   getSubsequentPagesTemplate,
   transformInvoiceData,
 } from "./InvoiceUtilities.ts";
@@ -180,7 +181,8 @@ export default class InvoiceService {
     const page = await browser.newPage();
     const isLastPage = currentPageIndex === numberOfPages;
     const isSinglePage = numberOfPages === 1;
-    const invoiceSenderInfoTemplate = await getInvoiceSenderInfoTemplate();
+    const invoiceSenderInfoTemplate = await getSenderPartialTemplate();
+    console.log("invoiceSenderInfoTemplate", invoiceSenderInfoTemplate);
 
     console.log("customTemplates", customTemplates);
 

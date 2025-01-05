@@ -144,6 +144,12 @@ export function getLastPageTemplate() {
   return getTemplateFromStorage(objectName);
 }
 
+export function getSenderPartialTemplate() {
+  consola.info("template-invoice-sender-info.html used");
+  const objectName = "template-invoice-sender-info.html";
+  return getTemplateFromStorage(objectName);
+}
+
 export function saveTemplateHtml(templateHtml: any): void {
   const timestamp = new Date().toISOString().replace(/:/g, "-").slice(0, -5); // Remove seconds and replace colons with dashes
 
