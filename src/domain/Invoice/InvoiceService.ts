@@ -201,10 +201,14 @@ export default class InvoiceService {
     }
 
     console.info("Trying to register partials", invoiceSenderInfoTemplate);
-    handlebars.registerPartial(
-      "invoiceSenderInfo",
-      <Handlebars.TemplateDelegate | string>invoiceSenderInfoTemplate,
-    );
+    try {
+      handlebars.registerPartial(
+        "invoiceSenderInfo",
+        <Handlebars.TemplateDelegate | string>invoiceSenderInfoTemplate,
+      );
+    } catch (e) {
+      console.error("Error registering partials", e);
+    }
 
     const template =
       isLastPage && !isSinglePage
