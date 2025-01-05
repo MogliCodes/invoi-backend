@@ -122,19 +122,23 @@ export default class InvoiceService {
         );
 
         // Process items for the previous page
-        const pageHtml = await this.processItemsForPage(
-          itemsForOnePage,
-          currentPageIndex,
-          transformedInvoiceData,
-          browser,
-          numberOfPages,
-          subtotal,
-          clientData,
-          settingsData,
-          contactData ? contactData : false,
-          customTemplates,
-        );
-        allPagesHtml += pageHtml;
+        try {
+          const pageHtml = await this.processItemsForPage(
+            itemsForOnePage,
+            currentPageIndex,
+            transformedInvoiceData,
+            browser,
+            numberOfPages,
+            subtotal,
+            clientData,
+            settingsData,
+            contactData ? contactData : false,
+            customTemplates,
+          );
+          allPagesHtml += pageHtml;
+        } catch (e) {
+          console.error("Error processing items for page", e);
+        }
 
         // Clear the accumulated items for the next page
         itemsForOnePage.length = 0;
