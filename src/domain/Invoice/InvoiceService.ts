@@ -180,12 +180,16 @@ export default class InvoiceService {
     isSinglePage: boolean,
     currentPageIndex: number,
   ) {
+    console.log("isLastPage", isLastPage);
+    console.log("isSinglePage", isSinglePage);
+    console.log("currentPageIndex", currentPageIndex);
     try {
       let templateSource;
 
       if (isLastPage && !isSinglePage) {
         templateSource = await getLastPageTemplate();
       } else if (currentPageIndex === 1 && isSinglePage) {
+        console.log("Getting default template");
         templateSource = await getDefaultTemplate();
       } else {
         templateSource = await getSubsequentPagesTemplate();
