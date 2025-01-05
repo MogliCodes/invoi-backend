@@ -9,7 +9,6 @@ import {
   calculatePages,
   generateFileName,
   getDefaultTemplate,
-  getInvoiceSenderInfoTemplate,
   getLastPageTemplate,
   getSenderPartialTemplate,
   getSubsequentPagesTemplate,
@@ -22,6 +21,7 @@ import SettingsModel, { ISettings } from "../Settings/SettingsModel.ts";
 import ContactModel, { IContact } from "../Contact/ContactModel.ts";
 import TemplatesModel, { ITemplate } from "./TemplatesModel.ts";
 import StorageController from "../Storage/StorageController.ts";
+// eslint-disable-next-line node/no-missing-import
 import { isEmptyObject } from "../../app/utils/utils.js";
 
 type InvoicePosition = {
@@ -76,15 +76,20 @@ export default class InvoiceService {
     customTemplates?: Array<ITemplate>,
   ): Promise<Buffer> {
     const maxCharsPerPage = 900;
+    const itemsForOnePage: InvoicePosition[] = [];
+
     let currentPageChars = 0;
     let currentPageIndex = 0;
-    const itemsForOnePage: InvoicePosition[] = [];
+
+    // TODO: Make this more elegant
     const transformedInvoiceData = transformInvoiceData(invoiceData);
     const { isReverseChargeInvoice } = transformedInvoiceData;
     const numberOfPages = calculatePages(
       transformedInvoiceData.items,
       maxCharsPerPage,
     );
+    // TODO END
+
     if (customTemplates) {
       const hasCustomTemplates = !isEmptyObject(customTemplates);
       console.log("hasCustomTemplates", hasCustomTemplates);
@@ -190,6 +195,8 @@ export default class InvoiceService {
       if (!templateSource) {
         throw new Error("Template source is undefined or invalid");
       }
+
+      console.log("Template source", templateSource);
 
       // Compile the template with no escape option
       const template = handlebars.compile(templateSource, { noEscape: true });

@@ -242,13 +242,8 @@ export default class InvoiceController {
       "Successfully fetched data for invoice creation. Now creating PDF...",
     );
 
-    const {
-      clientData,
-      settingsData,
-      contactData,
-      customTemplates,
-      customTemplatesHtml,
-    } = invoiceDataForInvoiceCreation.data;
+    const { clientData, settingsData, contactData, customTemplates } =
+      invoiceDataForInvoiceCreation.data;
 
     let pdfWasCreated = false;
 
@@ -286,7 +281,9 @@ export default class InvoiceController {
         consola.error("Error uploading to MinIO:", error);
         res.status(500).json({ error: "Error uploading to MinIO" });
       }
-    } catch (e) {}
+    } catch (e) {
+      consola.error("Error creating PDF:", e);
+    }
 
     const invoice = await InvoiceModel.create(invoiceData);
     consola.success(
