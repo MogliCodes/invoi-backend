@@ -415,6 +415,7 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
     const customTemplatesHtml: Array<string> = [];
     if (!!customTemplates.length && minioClient) {
       for (const template of customTemplates) {
+        // TODO: Extract to own function for getting template html
         const dataStream = await minioClient.getObject(
           userId,
           "templates/" + template.fileName,
@@ -435,6 +436,7 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
         dataStream.on("error", (err) => {
           consola.error(`Error while reading the object: ${err}`);
         });
+        // TODO END
       }
     }
 

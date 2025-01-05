@@ -63,13 +63,42 @@ export function transformInvoiceData(data: InvoiceData): InvoiceData {
   return transformedData;
 }
 
-export function getInvoiceSenderInfoTemplate(): string {
-  consola.info("template-invoice-sender-info.html used!");
-  const objectName = "template-invoice-sender-info.html";
-  return fs.readFileSync(
-    `${__dirname}/../../assets/templates/partials/${objectName}`,
-    "utf8",
-  );
+export async function getInvoiceSenderInfoTemplate(): string {
+  try {
+    consola.info("template-invoice-sender-info.html used!");
+    const objectName = "template-invoice-sender-info.html";
+    return fs.readFileSync(
+      `${__dirname}/../../assets/templates/partials/${objectName}`,
+      "utf8",
+    );
+  } catch (e) {
+    consola.error(
+      "Error reading the template-invoice-sender-info.html file",
+      e,
+    );
+    const minioClient = await StorageController.createStorageClient();
+    if (!minioClient) return "";
+    const dataStream = await minioClient.getObject(
+      "templates",
+      "partials/template-invoice-sender-info.html",
+    );
+    let templateData = "";
+
+    dataStream.on("data", (chunk) => {
+      templateData += chunk.toString();
+    });
+
+    dataStream.on("end", () => {
+      customTemplatesHtml.push(templateData);
+      consola.success(
+        `Successfully fetched template data for: ${template.fileName}`,
+      );
+    });
+
+    dataStream.on("error", (err) => {
+      consola.error(`Error while reading the object: ${err}`);
+    });
+  }
 }
 
 export async function getDefaultTemplate() {
