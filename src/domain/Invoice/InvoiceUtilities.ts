@@ -93,7 +93,7 @@ export async function getInvoiceSenderInfoTemplate(): Promise<string> {
 
 export async function getDefaultTemplate() {
   const objectName = "default-single-page.html";
-  const template = getTemplateFromStorage(objectName);
+  const template = await getTemplateFromStorage(objectName);
   console.log("template", template);
   return template;
 }
