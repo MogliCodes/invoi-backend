@@ -1,7 +1,5 @@
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 import { Browser, chromium } from "playwright";
 import handlebars from "handlebars";
 import {
@@ -13,6 +11,7 @@ import {
   getSenderPartialTemplate,
   getSubsequentPagesTemplate,
   transformInvoiceData,
+  getCustomTemplateFromStorage,
 } from "./InvoiceUtilities.ts";
 import { consola } from "consola";
 import fs from "fs";
@@ -23,6 +22,9 @@ import TemplatesModel, { ITemplate } from "./TemplatesModel.ts";
 import StorageController from "../Storage/StorageController.ts";
 // eslint-disable-next-line node/no-missing-import
 import { isEmptyObject } from "../../app/utils/utils.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 type InvoicePosition = {
   position: number;
@@ -45,6 +47,7 @@ type InvoiceData = {
   taxes: number;
   totalWithTaxes: number;
   isReverseChargeInvoice: boolean;
+  user?: string;
 };
 
 type ClientData = {
@@ -179,30 +182,37 @@ export default class InvoiceService {
     isLastPage: boolean,
     isSinglePage: boolean,
     currentPageIndex: number,
+    customTemplates: any,
+    userId: string,
   ) {
     console.log("isLastPage", isLastPage);
     console.log("isSinglePage", isSinglePage);
     console.log("currentPageIndex", currentPageIndex);
+
     try {
       let templateSource;
 
-      if (isLastPage && !isSinglePage) {
-        templateSource = await getLastPageTemplate();
-      } else if (currentPageIndex === 1 && isSinglePage) {
-        console.log("Getting default template");
-        templateSource = await getDefaultTemplate();
+      if ((customTemplates as Array<unknown>).length == 1 && userId) {
+        const objectName = `templates/${customTemplates[0]?.fileName || ""}`;
+        templateSource = await getCustomTemplateFromStorage(userId, objectName);
       } else {
-        templateSource = await getSubsequentPagesTemplate();
+        if (isLastPage && !isSinglePage) {
+          templateSource = await getLastPageTemplate();
+        } else if (currentPageIndex === 1 && isSinglePage) {
+          console.log("Getting default template");
+          templateSource = await getDefaultTemplate();
+        } else {
+          templateSource = await getSubsequentPagesTemplate();
+        }
       }
-      console.log("Template source", templateSource);
+
       // Ensure template source is valid before compiling
       if (!templateSource) {
         throw new Error("Template source is undefined or invalid");
       }
 
       // Compile the template with no escape option
-      const template = handlebars.compile(templateSource, { noEscape: true });
-      return template;
+      return handlebars.compile(templateSource, { noEscape: true });
     } catch (error) {
       console.error("Error fetching or compiling template:", error);
       throw error; // Rethrow the error after logging it
@@ -227,7 +237,7 @@ export default class InvoiceService {
     const invoiceSenderInfoTemplate = await getSenderPartialTemplate();
     console.log("invoiceSenderInfoTemplate", invoiceSenderInfoTemplate);
 
-    console.log("customTemplates", customTemplates);
+    console.log("invoiceData", invoiceData?.user);
 
     if (customTemplates.length > 1) {
       console.log("More than one custom template");
@@ -237,6 +247,7 @@ export default class InvoiceService {
       consola.info(
         "Exactly one custom template: " + customTemplates[0].fileName,
       );
+      console.log("customTemplates[0]", customTemplates[0].user);
     }
 
     if (!customTemplates.length) {
@@ -258,6 +269,8 @@ export default class InvoiceService {
       isLastPage,
       isSinglePage,
       currentPageIndex,
+      customTemplates,
+      invoiceData?.user || "",
     );
     //   isLastPage && !isSinglePage
     //     ? handlebars.compile(await getLastPageTemplate(), { noEscape: true })

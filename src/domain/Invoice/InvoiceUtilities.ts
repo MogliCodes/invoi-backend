@@ -2,7 +2,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { consola } from "consola";
-import StorageController from "../Storage/StorageController.js";
+import StorageController from "../Storage/StorageController.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -98,7 +98,41 @@ export async function getDefaultTemplate() {
   return template;
 }
 
-async function getTemplateFromStorage(objectName: string): Promise<unknown> {
+export async function getCustomTemplateFromStorage(
+  userId: string,
+  objectName: string,
+): Promise<unknown> {
+  try {
+    const minioClient = await StorageController.createStorageClient();
+    if (!minioClient) return;
+    console.log("minioClient created");
+    console.log("objectName", objectName);
+    const dataStream = await minioClient.getObject(userId, objectName);
+    let templateData = "";
+
+    return new Promise((resolve, reject) => {
+      dataStream.on("data", (chunk) => {
+        templateData += chunk.toString();
+      });
+
+      dataStream.on("end", () => {
+        console.info(`FETCHED ${objectName} used`);
+        resolve(templateData);
+      });
+
+      dataStream.on("error", (err) => {
+        reject(`Error while reading the object: ${err}`);
+      });
+    });
+  } catch (err) {
+    consola.error("Error fetching the template from MinIO:", err);
+    throw err;
+  }
+}
+
+export async function getTemplateFromStorage(
+  objectName: string,
+): Promise<unknown> {
   try {
     const minioClient = await StorageController.createStorageClient();
     if (!minioClient) return;
@@ -151,7 +185,7 @@ export function getSenderPartialTemplate() {
   return template;
 }
 
-export function saveTemplateHtml(templateHtml: any): void {
+export function saveTemplateHtml(templateHtml: never): void {
   const timestamp = new Date().toISOString().replace(/:/g, "-").slice(0, -5); // Remove seconds and replace colons with dashes
 
   fs.writeFileSync(
@@ -208,7 +242,7 @@ export function generateFileName(
   clientData: ClientData,
   invoiceData: InvoiceData,
 ) {
-  const unsafeCharacters = /[\s\/\\:*?"<>|]/g;
+  const unsafeCharacters = /[\s/\\:*?"<>|]/g;
   return `invoices/${invoiceData.nr.slice(0, 4)}/${
     invoiceData.nr
   }_${clientData.company.replace(/ /g, "-")}_${invoiceData.title.replace(
