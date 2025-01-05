@@ -71,13 +71,20 @@ export default class InvoiceController {
     req: Request<RequestParams, ResponseData, RequestBody, QueryParams>,
     res: Response,
   ): Promise<void> {
-    const { page, pageSize } = req.query;
-    const { headers } = req;
-    const clients = await InvoiceModel.find({ user: headers.userid })
-      .sort({ ["nr"]: 1 })
-      .skip((page - 1) * pageSize)
-      .limit(pageSize);
-    res.status(200).json(clients);
+    try {
+      const { page, pageSize } = req.query;
+      console.info("GET ALL INVOICES page", page);
+      console.info("GET ALL INVOICES pageSize", pageSize);
+      const { headers } = req;
+      const clients = await InvoiceModel.find({ user: headers.userid })
+        .sort({ ["nr"]: 1 })
+        .skip((page - 1) * pageSize)
+        .limit(pageSize);
+      res.status(200).json(clients);
+    } catch (e) {
+      consola.error(e);
+      res.status(500).json({ message: "Error getting invoices" });
+    }
   }
 
   public async getInvoicesByClient(
