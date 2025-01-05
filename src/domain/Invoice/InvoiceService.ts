@@ -210,6 +210,7 @@ export default class InvoiceService {
       console.error("Error registering partials", e);
     }
 
+    // TODO: extract to own function
     const template =
       isLastPage && !isSinglePage
         ? handlebars.compile(await getLastPageTemplate(), { noEscape: true })
