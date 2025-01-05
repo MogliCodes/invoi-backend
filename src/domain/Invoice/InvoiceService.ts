@@ -170,6 +170,32 @@ export default class InvoiceService {
     return await this.generatePdfBuffer(allPagesHtml);
   }
 
+  static async getTemplate(isLastPage, isSinglePage, currentPageIndex) {
+    try {
+      let templateSource;
+
+      if (isLastPage && !isSinglePage) {
+        templateSource = await getLastPageTemplate();
+      } else if (currentPageIndex === 1 && isSinglePage) {
+        templateSource = await getDefaultTemplate();
+      } else {
+        templateSource = await getSubsequentPagesTemplate();
+      }
+
+      // Ensure template source is valid before compiling
+      if (!templateSource) {
+        throw new Error("Template source is undefined or invalid");
+      }
+
+      // Compile the template with no escape option
+      const template = handlebars.compile(templateSource, { noEscape: true });
+      return template;
+    } catch (error) {
+      console.error("Error fetching or compiling template:", error);
+      throw error; // Rethrow the error after logging it
+    }
+  }
+
   static async processItemsForPage(
     itemsForOnePage: InvoicePosition[],
     currentPageIndex: number,
@@ -215,14 +241,18 @@ export default class InvoiceService {
     }
 
     // TODO: extract to own function
-    const template =
-      isLastPage && !isSinglePage
-        ? handlebars.compile(await getLastPageTemplate(), { noEscape: true })
-        : currentPageIndex === 1 && isSinglePage
-        ? handlebars.compile(await getDefaultTemplate(), { noEscape: true })
-        : handlebars.compile(await getSubsequentPagesTemplate(), {
-            noEscape: true,
-          });
+    const template = InvoiceService.getTemplate(
+      isLastPage,
+      isSinglePage,
+      currentPageIndex,
+    );
+    //   isLastPage && !isSinglePage
+    //     ? handlebars.compile(await getLastPageTemplate(), { noEscape: true })
+    //     : currentPageIndex === 1 && isSinglePage
+    //     ? handlebars.compile(await getDefaultTemplate(), { noEscape: true })
+    //     : handlebars.compile(await getSubsequentPagesTemplate(), {
+    //         noEscape: true,
+    //       });
 
     const formattedItems = itemsForOnePage.map((item) => {
       return {
