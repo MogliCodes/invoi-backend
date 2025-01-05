@@ -1013,7 +1013,7 @@ export default class InvoiceController {
       userIban: settingsData?.iban || "Default iban",
       userBic: settingsData?.bic || "Default bic",
     };
-    const invoiceSenderInfoTemplate = getInvoiceSenderInfoTemplate();
+    const invoiceSenderInfoTemplate = await getInvoiceSenderInfoTemplate();
     handlebars.registerPartial(
       "invoiceSenderInfo",
       <Handlebars.TemplateDelegate | string>invoiceSenderInfoTemplate,

@@ -172,7 +172,7 @@ export default class InvoiceService {
     const page = await browser.newPage();
     const isLastPage = currentPageIndex === numberOfPages;
     const isSinglePage = numberOfPages === 1;
-    const invoiceSenderInfoTemplate = getInvoiceSenderInfoTemplate();
+    const invoiceSenderInfoTemplate = await getInvoiceSenderInfoTemplate();
 
     console.log("customTemplates", customTemplates);
 
