@@ -245,7 +245,7 @@ export default class InvoiceService {
     }
 
     // TODO: extract to own function
-    const template = InvoiceService.getTemplate(
+    const template = await InvoiceService.getTemplate(
       isLastPage,
       isSinglePage,
       currentPageIndex,
