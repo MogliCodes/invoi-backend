@@ -93,17 +93,9 @@ export async function getInvoiceSenderInfoTemplate(): Promise<string> {
 
 export async function getDefaultTemplate() {
   const objectName = "default-single-page.html";
-  fs.existsSync(`${__dirname}/../../assets/templates/${objectName}`);
-
-  if (fs.existsSync(`${__dirname}/../../assets/templates/${objectName}`)) {
-    consola.info("default-single-page.html used");
-    return fs.readFileSync(
-      `${__dirname}/../../assets/templates/${objectName}`,
-      "utf8",
-    );
-  }
-
-  // return getTemplateFromStorage(objectName);
+  const template = getTemplateFromStorage(objectName);
+  console.log("template", template);
+  return template;
 }
 
 async function getTemplateFromStorage(objectName: string): Promise<unknown> {
