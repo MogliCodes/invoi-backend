@@ -138,19 +138,25 @@ async function getTemplateFromStorage(objectName: string): Promise<unknown> {
 export function getSubsequentPagesTemplate() {
   consola.info("template-subsequent.html used");
   const objectName = "template-subsequent.html";
-  return getTemplateFromStorage(objectName);
+  const template = getTemplateFromStorage(objectName);
+  console.log("template", template);
+  return template;
 }
 
 export function getLastPageTemplate() {
   consola.info("template-last-page.html used");
   const objectName = "template-last-page.html";
-  return getTemplateFromStorage(objectName);
+  const template = getTemplateFromStorage(objectName);
+  console.log("template", template);
+  return template;
 }
 
 export function getSenderPartialTemplate() {
   consola.info("template-invoice-sender-info.html used");
   const objectName = "template-invoice-sender-info.html";
-  return getTemplateFromStorage(objectName);
+  const template = getTemplateFromStorage(objectName);
+  console.log("template", template);
+  return template;
 }
 
 export function saveTemplateHtml(templateHtml: any): void {

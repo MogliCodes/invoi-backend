@@ -190,13 +190,11 @@ export default class InvoiceService {
       } else {
         templateSource = await getSubsequentPagesTemplate();
       }
-
+      console.log("Template source", templateSource);
       // Ensure template source is valid before compiling
       if (!templateSource) {
         throw new Error("Template source is undefined or invalid");
       }
-
-      console.log("Template source", templateSource);
 
       // Compile the template with no escape option
       const template = handlebars.compile(templateSource, { noEscape: true });
