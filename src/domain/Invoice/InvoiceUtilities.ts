@@ -78,6 +78,7 @@ export async function getInvoiceSenderInfoTemplate(): Promise<string> {
     });
 
     dataStream.on("end", () => {
+      console.info("FETCHED template-invoice-sender-info.html used");
       return templateData;
     });
 

@@ -198,6 +198,7 @@ export default class InvoiceService {
       console.log("No custom templates");
     }
 
+    console.info("Trying to register partials", invoiceSenderInfoTemplate);
     handlebars.registerPartial(
       "invoiceSenderInfo",
       <Handlebars.TemplateDelegate | string>invoiceSenderInfoTemplate,
