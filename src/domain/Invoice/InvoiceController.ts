@@ -250,44 +250,55 @@ export default class InvoiceController {
       customTemplatesHtml,
     } = invoiceDataForInvoiceCreation.data;
 
-    const pdfBuffer: Buffer = await InvoiceService.createPdf(
-      invoiceData,
-      clientData,
-      settingsData,
-      contactData ? contactData : false,
-      customTemplates,
-    );
-    consola.success("Successfully created PDF. Now uploading to MinIO...");
+    let pdfWasCreated = false;
 
-    const fileName = generateFileName(clientData as ClientData, invoiceData);
-    const bucketName = userId;
-
-    // Upload directly to MinIO
     try {
-      const minioClient = await StorageController.createStorageClient();
-      if (!minioClient) {
-        const error = new Error("Failed to create MinIO client");
-        console.error(error);
-      }
-      if (!minioClient) return;
-      const exists = await minioClient.bucketExists(bucketName);
-      if (!exists) {
-        await minioClient.makeBucket(bucketName);
-      }
+      const pdfBuffer: Buffer = await InvoiceService.createPdf(
+        invoiceData,
+        clientData,
+        settingsData,
+        contactData ? contactData : false,
+        customTemplates,
+      );
+      pdfWasCreated = true;
+      consola.success("Successfully created PDF. Now uploading to MinIO...");
 
-      await minioClient.putObject(bucketName, fileName, pdfBuffer);
-      consola.success(`Successfully uploaded invoice to MinIO: ${fileName}`);
-    } catch (error) {
-      consola.error("Error uploading to MinIO:", error);
-      res.status(500).json({ error: "Error uploading to MinIO" });
-    }
+      const fileName = generateFileName(clientData as ClientData, invoiceData);
+      const bucketName = userId;
+
+      // Upload directly to MinIO
+      try {
+        const minioClient = await StorageController.createStorageClient();
+        if (!minioClient) {
+          const error = new Error("Failed to create MinIO client");
+          console.error(error);
+        }
+        if (!minioClient) return;
+        if (!pdfWasCreated) return;
+        const exists = await minioClient.bucketExists(bucketName);
+        if (!exists) {
+          await minioClient.makeBucket(bucketName);
+        }
+
+        await minioClient.putObject(bucketName, fileName, pdfBuffer);
+        consola.success(`Successfully uploaded invoice to MinIO: ${fileName}`);
+      } catch (error) {
+        consola.error("Error uploading to MinIO:", error);
+        res.status(500).json({ error: "Error uploading to MinIO" });
+      }
+    } catch (e) {}
+
     const invoice = await InvoiceModel.create(invoiceData);
+    consola.success(
+      pdfWasCreated
+        ? "Successfully created invoice in MongoDB"
+        : "Created invoice without pdf",
+    );
     consola.success("Successfully created invoice in MongoDB");
     consola.success("Invoice creation completed successfully");
     res.status(201).json({
       status: 201,
       message: "Successfully created invoice",
-      link: `${fileName}.pdf`,
       invoice,
     });
   }
