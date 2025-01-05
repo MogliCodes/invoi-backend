@@ -170,7 +170,11 @@ export default class InvoiceService {
     return await this.generatePdfBuffer(allPagesHtml);
   }
 
-  static async getTemplate(isLastPage, isSinglePage, currentPageIndex) {
+  static async getTemplate(
+    isLastPage: boolean,
+    isSinglePage: boolean,
+    currentPageIndex: number,
+  ) {
     try {
       let templateSource;
 
