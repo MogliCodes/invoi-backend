@@ -21,6 +21,7 @@ import SettingsModel, { ISettings } from "../Settings/SettingsModel.ts";
 import ContactModel, { IContact } from "../Contact/ContactModel.ts";
 import TemplatesModel, { ITemplate } from "./TemplatesModel.ts";
 import StorageController from "../Storage/StorageController.ts";
+import { isEmptyObject } from "../../app/utils/utils.js";
 
 type InvoicePosition = {
   position: number;
@@ -83,6 +84,13 @@ export default class InvoiceService {
       transformedInvoiceData.items,
       maxCharsPerPage,
     );
+    if (customTemplates) {
+      const hasCustomTemplates = !isEmptyObject(customTemplates);
+      console.log("hasCustomTemplates", hasCustomTemplates);
+    }
+
+    console.info("customTemplates", customTemplates);
+    console.info("typeof customTemplates", typeof customTemplates);
     consola.info("Has custom templates: ", !!customTemplates);
     consola.info("Has contact data: ", !!contactData);
     consola.info(
@@ -394,6 +402,7 @@ dieser Rechnung. Wir danken für Ihren Auftrag und wünschen weiterhin gute Zu
       user: userId,
     });
     if (!customTemplates) {
+      console.info("No custom templates found");
       return {
         data: {
           clientData,
