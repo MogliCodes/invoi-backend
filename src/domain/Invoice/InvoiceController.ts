@@ -72,18 +72,33 @@ export default class InvoiceController {
     res: Response,
   ): Promise<void> {
     try {
-      const { page, pageSize } = req.query;
+      const { page, pageSize, year, client } = req.query;
       const currentPage = parseInt(page?.toString() || "1", 10) || 1; // Default to 1 if page is not set or invalid
       const currentPageSize = parseInt(pageSize?.toString() || "50", 10) || 10; // Default to 10 if pageSize is not set or invalid
-
+      console.log("client", client);
       const skip = (currentPage - 1) * currentPageSize; // Calculate skip based on page and pageSize
 
-      // Use the currentPage, currentPageSize, and skip in your query or pagination logic
+      let queryParams;
 
-      console.info("GET ALL INVOICES page", page);
-      console.info("GET ALL INVOICES pageSize", pageSize);
-      const { headers } = req;
-      const clients = await InvoiceModel.find({ user: headers.userid })
+      if (client) {
+        queryParams = {
+          client: client,
+        };
+      }
+
+      let options = {};
+      if (year) {
+        options = {
+          nr: { $regex: new RegExp(`^${year}-\\d+$`) },
+        };
+      }
+
+      console.log("queryParams", queryParams);
+
+      const clients = await InvoiceModel.find({
+        ...options,
+        ...queryParams,
+      })
         .sort({ ["nr"]: 1 })
         .skip(skip)
         .limit(pageSize);
