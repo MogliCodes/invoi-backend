@@ -12,6 +12,7 @@ router.post("/draft", invoiceController.createInvoiceDraft);
 
 router.get("/", invoiceController.getAllInvoices);
 router.get("/count", invoiceController.getInvoicesCount);
+router.get("/years", invoiceController.getYearsWithInvoices);
 router.get("/client", invoiceController.getInvoicesByClient);
 router.post("/bulk/delete", invoiceController.bulkDeleteInvoices);
 router.post("/", invoiceController.createInvoice);

@@ -78,31 +78,37 @@ export default class InvoiceController {
       console.log("client", client);
       const skip = (currentPage - 1) * currentPageSize; // Calculate skip based on page and pageSize
 
-      let queryParams;
+      const queryParams: Record<string, unknown> = {
+        user: req.headers?.userid || "",
+        ...(client && { client }), // Add `client` only if it's provided
+      };
 
-      if (client) {
-        queryParams = {
-          client: client,
-        };
-      }
+      const options: Record<string, unknown> = {
+        ...(year && { nr: { $regex: new RegExp(`^${year}-\\d+$`) } }), // Add `nr` filter if `year` is provided
+      };
 
-      let options = {};
-      if (year) {
-        options = {
-          nr: { $regex: new RegExp(`^${year}-\\d+$`) },
-        };
-      }
-
-      console.log("queryParams", queryParams);
-
-      const clients = await InvoiceModel.find({
+      const invoices = await InvoiceModel.find({
         ...options,
         ...queryParams,
       })
         .sort({ ["nr"]: 1 })
         .skip(skip)
         .limit(pageSize);
-      res.status(200).json(clients);
+
+      const totalAcc = invoices.reduce(
+        (acc, invoice) => acc + parseFloat(invoice?.total ?? "0"),
+        0,
+      );
+      const taxesAcc = invoices.reduce(
+        (acc, invoice) => acc + parseFloat(invoice?.taxes ?? "0"),
+        0,
+      );
+      const totalWithTaxesAcc = invoices.reduce(
+        (acc, invoice) => acc + parseFloat(invoice?.totalWithTaxes ?? "0"),
+        0,
+      );
+
+      res.status(200).json({ invoices, totalAcc, taxesAcc, totalWithTaxesAcc });
     } catch (e) {
       consola.error(e);
       res.status(500).json({ message: "Error getting invoices" });
@@ -187,6 +193,8 @@ export default class InvoiceController {
       const invoiceCount = await InvoiceModel.countDocuments({
         user: headers?.userid,
       });
+      console.log("headers?.userid,", headers?.userid);
+      console.log("invoiceCount", invoiceCount);
       res.status(200).json(invoiceCount);
     } catch (err) {
       console.log(err);
@@ -1044,5 +1052,20 @@ export default class InvoiceController {
     const compiledTemplate = handlebars.compile(await getDefaultTemplate());
     console.log("compiledTemplate", compiledTemplate);
     res.send(compiledTemplate(exampleData));
+  }
+
+  /**
+   * Get all years that have invoices, return each year only once
+   */
+  public async getYearsWithInvoices(req: Request, res: Response) {
+    const { headers } = req;
+    const years = await InvoiceModel.find({ user: headers.userid }).distinct(
+      "nr",
+    );
+    const uniqueYears = Array.from(
+      new Set(years.map((year: string) => year.split("-")[0])),
+    );
+    console.log("uniqueYears", uniqueYears);
+    res.json({ data: uniqueYears });
   }
 }
