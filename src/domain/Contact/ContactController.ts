@@ -9,6 +9,7 @@ import {
   QueryParams,
   // eslint-disable-next-line node/no-missing-import
 } from "../../types.js";
+import mongoose from "mongoose";
 
 type ContactFilter = {
   user: string;
@@ -93,23 +94,17 @@ export default class ContactController {
     }
     consola.info("Getting contacts for user: ", headers?.userid);
 
-    const { page, pageSize, clientId } = req.query;
+    const { page, pageSize } = req.query;
 
     const currentPage = parseInt(page?.toString() || "1", 10) || 1; // Default to 1 if page is not set or invalid
     const currentPageSize = parseInt(pageSize?.toString() || "50", 10) || 10; // Default to 10 if pageSize is not set or invalid
     const skip = (currentPage - 1) * currentPageSize; // Calculate skip based on page and pageSize
 
     const filter: ContactFilter = { user: headers?.userid as string };
-    if (clientId) {
-      filter["client"] = clientId;
-    }
-    consola.info("Using filters: ", filter);
-
     const contacts: Array<IContact> = await ContactModel.find(filter)
       .sort({ ["lastname"]: 1 })
       .skip(skip)
       .limit(currentPageSize);
-    consola.log.raw(contacts);
     res.status(200).json(contacts);
   }
 
