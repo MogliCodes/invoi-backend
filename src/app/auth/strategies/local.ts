@@ -11,7 +11,7 @@ passport.serializeUser((user, done) => {
   done(null, user);
 });
 passport.deserializeUser((user: Express.User, done) => {
-  consola.log(`Deserializing user ${user}`);
+  consola.info(`Deserializing user ${JSON.stringify(user)}`);
   try {
     const findUser = UserModel.findById(user);
     if (!findUser) {

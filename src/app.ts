@@ -15,8 +15,9 @@ import settingsRouter from "./domain/Settings/SettingsRoutes.ts";
 import storageRouter from "./domain/Storage/StorageRoutes.ts";
 import servicesRouter from "./domain/Services/ServicesRoutes.ts";
 import timeRecordsRoutes from "./domain/TimeRecords/TimeRecordsRoutes.ts";
+import incomeRoutes from "./domain/Income/IncomeRoutes.ts";
 import StorageController from "./domain/Storage/StorageController.ts";
-import { Browser, chromium } from "playwright";
+import { chromium } from "playwright";
 
 loadEnv();
 
@@ -51,5 +52,6 @@ app.use("/restapi/settings", settingsRouter);
 app.use("/restapi/storage", storageRouter);
 app.use("/restapi/services", servicesRouter);
 app.use("/restapi/time-records", timeRecordsRoutes);
+app.use("/restapi/income", incomeRoutes);
 
 app.listen(port, () => consola.success(`App is listening on port ${port}`));
