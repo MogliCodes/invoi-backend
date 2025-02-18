@@ -14,7 +14,9 @@
     "dev:watch": "nodemon --delay 5 --watch './**/*.ts' --exec 'node --experimental-specifier-resolution=node --loader ts-node/esm' src/app.ts",
     "build": "rm -rf ./build && tsc --noEmit false --project tsconfig.build.json",
     "start": "node --es-module-specifier-resolution=node --loader ts-node/esm ./src/app.ts",
-    "start:prod": "pnpm build && pnpm start"
+    "start:prod": "pnpm build && pnpm start",
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [],
   "author": "",
@@ -57,6 +59,7 @@
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.6",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@vitest/coverage-v8": "3.0.5",
     "eslint": "^8.45.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-node": "^11.1.0",
@@ -69,7 +72,8 @@
     "ts-node-dev": "^2.0.0",
     "tsc-watch": "^6.0.4",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "vitest": "^3.0.5"
   },
   "prisma": {
     "schema": "./src/database/schema.prisma"

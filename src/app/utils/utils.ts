@@ -1,5 +1,6 @@
 export function isEmptyObject(obj: unknown): boolean {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
+  if (obj === null || obj === undefined || typeof obj !== "object") {
+    return false;
+  }
   return Object.keys(obj).length === 0;
 }
